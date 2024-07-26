@@ -1,0 +1,253 @@
+:root {
+    --primary: #b8e4ff;
+    --bg: #ffffff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    outline: none;
+    border: none;
+    text-decoration: none;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg);
+    color: #ffffff;
+    min-width: 1000px;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.4rem 7%;
+    background-color: #011c40;
+    border-bottom: 1px solid #513c28;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+}
+
+.navbar .navbar-logo {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffffff;
+    font-style: italic;
+}
+
+.navbar .navbar-logo span {
+    color: var(--primary);
+}
+
+.navbar .navbar-extra a {
+    color: #ffffff;
+    margin: 0 0.5rem;
+}
+
+.navbar .navbar-extra a:hover {
+    color: var(--primary);
+}
+
+/* Navbar filter Form */
+.navbar .filter-form {
+    position: absolute;
+    top: 100%;
+    right: 7%;
+    background-color: var(--primary);
+    width: 15rem;
+    height: auto;
+    max-height: 30rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.3s ease-in-out;
+    padding: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
+
+.navbar .filter-form.active {
+    transform: scaleY(1);
+}
+
+.navbar .filter-form input {
+    height: auto;
+    width: calc(100% - 2rem);
+    font-size: 1rem;
+    color: var(--bg);
+    background-color: var(--bg);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #011c40;
+    border-radius: 4px;/
+}
+
+.navbar .filter-form label {
+    cursor: pointer;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: #011c40;
+    display: block;
+}
+
+.box {
+    color: var(--primary);
+}
+
+.navbar .navbar-nav {
+    position: absolute;
+    top: 100%;
+    right: -100%;
+    background-color: var(--primary);
+    width: 20rem;
+    height: 50rem;
+    transition: 0.4s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.navbar .navbar-nav.active {
+    right: 0;
+}
+
+.navbar .navbar-nav a {
+    color: var(--bg);
+    font-size: 1.5rem;
+    margin: 1rem 8% 0;
+    display: flex;
+    align-items: center;
+    padding-bottom: 0.1rem;
+    position: relative;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.navbar .navbar-nav a:hover {
+    color: #011c40;
+}
+
+.navbar .navbar-nav a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 1.5px;
+    background-color: #011c40;
+    transform: scaleX(0);
+    transform-origin: bottom left;
+    transition: transform 0.3s ease;
+}
+
+.navbar .navbar-nav a:hover::after {
+    transform: scaleX(1);
+}
+
+.navbar .filter-form .submit-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.navbar .filter-form .submit-container button {
+    padding: 0.5rem 2rem;
+    font-size: 1.2rem;
+    background-color: #011c40;
+    color: var(--bg);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.navbar .filter-form .submit-container button:hover {
+    background-color: var(--bg);
+    color: #011c40;
+}
+
+.home-item, .archive-item, .excel-item, .word-item, .add-item {
+    position: absolute;
+    right: 0;
+}
+
+.home-item:hover, .archive-item:hover, .excel-item:hover, .word-item:hover, .add-item:hover {
+    color: #011c40;
+}
+
+.table th {
+    padding: 8rem 0% 1.5rem;
+}
+
+.table th, .table td {
+    text-align: center;
+}
+
+.pos, .qty, .nop, .remark {
+    min-width: 100px;
+}
+
+.process, .machine, .material {
+    min-width: 130px;
+}
+
+.est, .duration, .status, .prioritas {
+    min-width: 150px;
+}
+
+.action, .start, .end {
+    min-width: 200px;
+}
+
+.part {
+    min-width: 350px;
+}
+
+.form-control {
+    max-width: 220px;
+    text-align: center;
+}
+.btn {
+    min-width: 70px;
+}
+.status-red {
+    color: red !important;
+}
+.status-green {
+    color: green !important;
+}
+
+/* Opsi warna */
+.gmc-option {
+    color: blue;
+}
+.gec-option {
+    color: green;
+}
+.gdc-option {
+    color: yellow;
+}
+
+/* Warna latar belakang elemen select berdasarkan pilihan */
+.select-gmc {
+    background-color: blue;
+    color: white;
+}
+.select-gec {
+    background-color: green;
+    color: white;
+}
+.select-gdc {
+    background-color: yellow;
+    color: black;
+}
+
