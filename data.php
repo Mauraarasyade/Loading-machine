@@ -1,26 +1,29 @@
 <?php
-include_once("./koneksi.php");
+    include_once("./koneksi.php");
 
-$processFilter = isset($_GET['process']) ? $_GET['process'] : '';
-$machineFilter = isset($_GET['machine']) ? $_GET['machine'] : '';
-$nopFilter = isset($_GET['nop']) ? $_GET['nop'] : '';
+    $processFilter = isset($_GET['process']) ? $_GET['process'] : '';
+    $machineFilter = isset($_GET['machine']) ? $_GET['machine'] : '';
+    $nopFilter = isset($_GET['nop']) ? $_GET['nop'] : '';
 
-$query = "SELECT * FROM data WHERE 1=1";
+    $query = "SELECT * FROM data WHERE 1=1";
 
-if (!empty($processFilter)) {
-    $query .= " AND PROCESS = '" . mysqli_real_escape_string($db, $processFilter) . "'";
-}
+    if (!empty($processFilter)) {
+        $query .= " AND PROCESS = '" . mysqli_real_escape_string($db, $processFilter) . "'";
+    }
 
-if (!empty($machineFilter)) {
-    $query .= " AND MACHINE = '" . mysqli_real_escape_string($db, $machineFilter) . "'";
-}
+    if (!empty($machineFilter)) {
+        $query .= " AND MACHINE = '" . mysqli_real_escape_string($db, $machineFilter) . "'";
+    }
 
-if (!empty($nopFilter)) {
-    $query .= " AND NOP = '" . mysqli_real_escape_string($db, $nopFilter) . "'";
-}
+    if (!empty($nopFilter)) {
+        $query .= " AND NOP = '" . mysqli_real_escape_string($db, $nopFilter) . "'";
+    }
 
-$query .= " ORDER BY PRIORITAS DESC, id ASC";
-$result = mysqli_query($db, $query);
+    $query .= " ORDER BY CASE WHEN START_TIME != '00:00:00' AND END_TIME = '00:00:00' THEN 1
+                                WHEN START_TIME = '00:00:00' AND END_TIME = '00:00:00' THEN 2
+                                ELSE 3 END, PRIORITAS DESC, DATE ASC, START_TIME ASC";
+    $result = mysqli_query($db, $query);
+
 ?>
 
 <!DOCTYPE html>
@@ -28,25 +31,71 @@ $result = mysqli_query($db, $query);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOADING MACHINE</title>
+    <title>HALAMAN LOADING MACHINE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
     <link rel="stylesheet" href="./style.css">
+    <style>
+        .btn-action {
+            border: none;
+            background-color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: color 0.4s;
+        }
+
+        .btn-action.start-button {
+            background-color: white;
+            color: grey;
+        }
+        .start-active {
+            background-color: white;
+            color: green !important;
+        }
+
+        .inactive {
+            background-color: white;
+            color:black !important;
+        }
+
+        .btn-action.pause-button {
+            background-color: white;
+            color: grey;
+        }
+        .pause-active {
+            background-color: white;
+            color: orange !important;
+        }
+
+        .btn-action.end-button {
+            background-color: white;
+            color: grey;
+        }
+        .end-active {
+            background-color: white;
+            color: red !important;
+        }
+    </style>
 </head>
 <body>
-    <!-- Navbar Start -->
     <nav class="navbar">
         <a href="#" class="navbar-logo">Loading<span> Machine</span>.</a>
         <div class="navbar-nav">
             <div class="menu">
                 <a href="./index.php">Home<i data-feather="home" class="home-item"></i></a>
             </div>
-            <div class="arsip">
-                <a href="./arsip.php">Archive<i data-feather="archive" class="archive-item"></i></a>
-            </div>
             <div class="add">
                 <a href="./tambah-data.php">Add Data<i data-feather="plus-square" class="add-item"></i></a>
+            </div>
+            <div class="empty">
+                <a href="./kosong-data.php">Empty Data Time<i data-feather="file-minus" class="add-item"></i></a>
+            </div>
+            <div class="process">
+                <a href="./progres.php">Process<i data-feather="clock" class="add-item"></i></a>
+            </div>
+            <div class="arsip">
+                <a href="./arsip.php">Archive<i data-feather="archive" class="archive-item"></i></a>
             </div>
             <div class="excel">
                 <a href="cetak-excel.php?<?php echo http_build_query($_GET); ?>" target="_blank">Download Excel<i data-feather="table" class="excel-item"></i></a>
@@ -126,7 +175,6 @@ $result = mysqli_query($db, $query);
             </label>
         </div>
     </nav>
-    <!-- Navbar End -->
     <div class="container">
         <table class="table">
             <thead>
@@ -139,6 +187,7 @@ $result = mysqli_query($db, $query);
                     <th scope="col" class="qty">QTY</th>
                     <th scope="col" class="nop">NOP</th>
                     <th scope="col" class="est">EST</th>
+                    <th scope="col" class="date">DATE</th>
                     <th scope="col" class="start">START TIME</th>
                     <th scope="col" class="end">END TIME</th>
                     <th scope="col" class="duration">DURATION</th>
@@ -149,35 +198,48 @@ $result = mysqli_query($db, $query);
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($result as $data) {
-                    $durationParts = explode(' ', $data["DURATION"]);
-                    if (count($durationParts) >= 4) {
-                        $durationHours = intval($durationParts[0]);
-                        $durationMinutes = intval($durationParts[2]);
-                        $durationMinutesTotal = ($durationHours * 60) + $durationMinutes;
-                    } else {
-                        $durationMinutesTotal = 0;
-                    }
+                <?php
+                    foreach ($result as $data) {
+                        $durationParts = explode(':', $data["DURATION"]);
+                        $durationHours = !empty($durationParts[0]) ? intval($durationParts[0]) : 0;
+                        $durationMinutes = !empty($durationParts[1]) ? intval($durationParts[1]) : 0;
+                        $durationSeconds = !empty($durationParts[2]) ? intval($durationParts[2]) : 0;
 
-                    $estParts = explode(' ', $data["EST"]);
-                    if (count($estParts) >= 4) {
-                        $estHours = intval($estParts[0]);
-                        $estMinutes = intval($estParts[2]);
-                        $estMinutesTotal = ($estHours * 60) + $estMinutes;
-                    } else {
-                        $estMinutesTotal = 0;
-                    }
+                        $estParts = explode(':', $data["EST"]);
+                        $estHours = !empty($estParts[0]) ? intval($estParts[0]) : 0;
+                        $estMinutes = !empty($estParts[1]) ? intval($estParts[1]) : 0;
+                        $estSeconds = !empty($estParts[2]) ? intval($estParts[2]) : 0;
 
-                    $diffMinutes = $durationMinutesTotal - $estMinutesTotal;
-                    $absDiffMinutes = abs($diffMinutes);
+                        $durationTotalSeconds = ($durationHours * 3600) + ($durationMinutes * 60) + $durationSeconds;
+                        $estTotalSeconds = ($estHours * 3600) + ($estMinutes * 60) + $estSeconds;
 
-                    $diffHours = floor($absDiffMinutes / 60);
-                    $diffMinutes = $absDiffMinutes % 60;
+                        $diffSeconds = $durationTotalSeconds - $estTotalSeconds;
+                        $absDiffSeconds = abs($diffSeconds);
+                        $diffHours = floor($absDiffSeconds / 3600);
+                        $diffMinutes = floor(($absDiffSeconds % 3600) / 60);
+                        $diffSecondsFinal = $absDiffSeconds % 60;
 
-                    $statusClass = $durationMinutesTotal > $estMinutesTotal ? 'status-red' : 'status-green';
-                    $statusText = $durationMinutesTotal > $estMinutesTotal ?
-                        "WAKTU LEBIH <br> $diffHours jam, $diffMinutes menit" :
-                        "WAKTU CUKUP <br> $diffHours jam, $diffMinutes menit";
+                        if (empty($data["START_TIME"]) || $data["START_TIME"] === '00:00:00' && empty($data["END_TIME"]) || $data["END_TIME"] === '00:00:00') {
+                            $statusClass = 'status-red';
+                            $statusText = "Belum Diproses";
+                        } elseif (!empty($data["START_TIME"]) && empty($data["END_TIME"])) {
+                            $statusClass = 'status-green';
+                            $statusText = "Sedang Diproses";
+                        } elseif (!empty($data["START_TIME"]) && !empty($data["END_TIME"])) {
+                            if ($diffSeconds > 0) {
+                                $statusClass = 'status-red';
+                                $statusText = "WAKTU LEBIH <br> $diffHours jam, $diffMinutes menit,<br> $diffSecondsFinal detik";
+                            } elseif ($diffSeconds < 0) {
+                                $statusClass = 'status-green';
+                                $statusText = "WAKTU KURANG <br> $diffHours jam, $diffMinutes menit,<br> $diffSecondsFinal detik";
+                            } else {
+                                $statusClass = 'status-neutral';
+                                $statusText = "WAKTU CUKUP";
+                            }
+                        } else {
+                            $statusClass = 'status-red';
+                            $statusText = "Status Tidak Diketahui";
+                        }
                 ?>
                     <tr>
                         <td class="process">
@@ -196,7 +258,7 @@ $result = mysqli_query($db, $query);
                         <td class="machine">
                             <form action="update-machine.php" method="POST" class="update-machine">
                                 <input type="hidden" name="id" value="<?php echo $data["id"]; ?>">
-                                <select id="machineFilter" name="MACHINE" class="form-control" onchange="this.form.submit(); updateSelectColor(this);">
+                                <select name="MACHINE" data-key="<?php echo $data["id"]; ?>" class="form-control machineColorSelect" onchange="updateSelectColor(this); this.form.submit();">
                                     <option value="">Pilih Mesin</option>
                                     <option value="GMC 1" class="gmc-option" <?php if($data["MACHINE"] == 'GMC 1') echo 'selected'; ?>>GMC 1</option>
                                     <option value="GMC 2" class="gmc-option" <?php if($data["MACHINE"] == 'GMC 2') echo 'selected'; ?>>GMC 2</option>
@@ -236,24 +298,38 @@ $result = mysqli_query($db, $query);
                         <td class="pos"><?php echo htmlspecialchars($data["POS"]); ?></td>
                         <td class="qty"><?php echo htmlspecialchars($data["QTY"]); ?></td>
                         <td class="nop"><?php echo htmlspecialchars($data["NOP"]); ?></td>
-                        <td class="est" data-field="est"><?php echo htmlspecialchars($data["EST"]); ?></td>
-                        <td class="start">
-                            <input type="datetime-local" name="START_TIME" class="form-control" data-id="<?php echo $data["id"]; ?>" value="<?php echo date('Y-m-d\TH:i', strtotime($data['START_TIME'])); ?>">
+                        <td class="est" data-id="<?php echo $data['id']; ?>" data-field="est"><?php echo date('H:i:s', strtotime($data['EST'])); ?></td>
+                        <td class="date">
+                            <input type="date" name="DATE" class="form-control" data-id="<?php echo $data["id"]; ?>" value="<?php echo date('Y-m-d', strtotime($data['DATE'])); ?>">
                         </td>
-                        <td class="end">
-                            <input type="datetime-local" name="END_TIME" class="form-control" data-id="<?php echo $data["id"]; ?>" value="<?php echo date('Y-m-d\TH:i', strtotime($data['END_TIME'])); ?>">
+                        <td class="start-time">
+                            <input type="hidden" name="START_TIME" class="form-control" data-id="<?php echo $data['id']; ?>" value="<?php echo date('H:i:s', strtotime($data['START_TIME'])); ?>">
+                            <button id="startButton<?php echo $data['id']; ?>" class="btn-action start-button" type="button" data-id="<?php echo $data['id']; ?>" onclick="updateStartTime(<?php echo $data['id']; ?>)">
+                                <i data-feather="play-circle"></i>
+                            </button>
+                            <span id="startTime<?php echo $data['id']; ?>"><?php echo date('H:i:s', strtotime($data['START_TIME'])); ?></span>
+                            <button id="pauseButton<?php echo $data['id']; ?>" class="btn-action pause-button" type="button" data-id="<?php echo $data['id']; ?>" onclick="pauseStopwatch(<?php echo $data['id']; ?>)">
+                                <i data-feather="pause-circle"></i>
+                            </button>
                         </td>
-                        <td class="duration" data-id="<?php echo $data['id']; ?>" data-field="duration">
-                            <?php echo htmlspecialchars($data["DURATION"]); ?>
+                        <td class="end-time">
+                            <input type="hidden" name="END_TIME" class="form-control" data-id="<?php echo $data['id']; ?>" value="<?php echo date('H:i:s', strtotime($data['END_TIME'])); ?>">
+                            <span id="endTime<?php echo $data['id']; ?>"><?php echo date('H:i:s', strtotime($data['END_TIME'])); ?></span>
+                            <button id="endButton<?php echo $data['id']; ?>" class="btn-action end-button" type="button" data-id="<?php echo $data['id']; ?>" onclick="updateEndTime(<?php echo $data['id']; ?>)">
+                                <i data-feather="minus-circle"></i>
+                            </button>
                         </td>
+                        <td><span id="duration<?php echo $data['id']; ?>"><?php echo date('H:i:s', strtotime($data['DURATION'])); ?></span></td>
                         <td data-id="<?php echo $data['id']; ?>" data-field="status" class="<?php echo $statusClass; ?>">
                             <?php echo $statusText; ?>
                         </td>
-                        <td class="remark"><?php echo htmlspecialchars($data["REMARK"]); ?></td>
-                        <td class="prioritas" style="color: red; font-weight: bold;"><?php echo htmlspecialchars($data["PRIORITAS"]); ?></td>
+                        <td class="remark"><?php echo htmlspecialchars($data['REMARK']); ?></td>
+                        <td class="prioritas" id="prioritas-<?php echo $data['id']; ?>" data-original-prioritas="<?php echo htmlspecialchars($data['PRIORITAS']); ?>" style="color: red; font-weight: bold;">
+                            <?php echo htmlspecialchars($data['PRIORITAS']); ?>
+                        </td>
                         <td class="action">
-                            <a class="btn btn-primary" href="edit-data.php?id=<?php echo $data["id"]; ?>">Edit</a>
-                            <a class="btn btn-danger my-1" href="hapus-data.php?id=<?php echo $data["id"]; ?>">Hapus</a>
+                            <a class="btn btn-primary" href="edit-data.php?id=<?php echo $data['id']; ?>">Edit</a>
+                            <a class="btn btn-danger my-1" href="hapus-data.php?id=<?php echo $data['id']; ?>">Hapus</a>
                         </td>
                     </tr>
                 <?php } ?>
@@ -263,7 +339,335 @@ $result = mysqli_query($db, $query);
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-1MtbIsyU+mg1Xy5Z2pIvGSKXixbJz4lAxj5xVuf7B7OfRmiH2c2o6ZxfIUlHs5EO5" crossorigin="anonymous"></script>
     <script>feather.replace();</script>
-    <script src="./script.js"></script>
     <script src="./style.js"></script>
+    <script src="./javascript.js"></script>
+    <script>
+        let timers = {};
+let startTimes = {};
+let elapsedTime = {};
+let pausedAt = {};
+let isPaused = {};
+
+function formatTime(date) {
+    let hours = date.getHours().toString().padStart(2, '0');
+    let minutes = date.getMinutes().toString().padStart(2, '0');
+    let seconds = date.getSeconds().toString().padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+}
+
+function saveButtonStatus(id, status) {
+    console.log(`Saving button status for ID ${id}: ${status}`);
+    localStorage.setItem(`button_status_${id}`, status);
+}
+
+function getButtonStatus(id) {
+    const status = localStorage.getItem(`button_status_${id}`) || 'inactive';
+    console.log(`Retrieved button status for ID ${id}: ${status}`);
+    return status;
+}
+
+function saveToLocalStorage(id, startTime, elapsedTime, isPaused) {
+    const data = {
+        startTime: startTime,
+        elapsedTime: elapsedTime,
+        isPaused: isPaused
+    };
+    localStorage.setItem(`stopwatch_${id}`, JSON.stringify(data));
+}
+
+function loadFromLocalStorage(id) {
+    const data = JSON.parse(localStorage.getItem(`stopwatch_${id}`));
+    if (data) {
+        try {
+            startTimes[id] = data.startTime ? new Date(data.startTime) : new Date('1970-01-01T00:00:00Z');
+            elapsedTime[id] = data.elapsedTime || 0;
+            isPaused[id] = data.isPaused || false;
+
+            if (startTimes[id]) {
+                if (!isPaused[id] && getButtonStatus(id) !== 'end') {
+                    startStopwatch(id);
+                } else if (isPaused[id]) {
+                    startTimes[id] = new Date(new Date() - elapsedTime[id]);
+                    updateStopwatchDisplay(id);
+                }
+            }
+        } catch (e) {
+            console.error(`Error loading data for ID ${id}: ${e}`);
+            resetStopwatch(id); // Reset if there's an error
+        }
+    } else {
+        startTimes[id] = new Date('1970-01-01T00:00:00Z');
+        elapsedTime[id] = 0;
+        isPaused[id] = false;
+    }
+
+    updateButtonStyles(id, getButtonStatus(id));
+}
+
+function startStopwatch(id) {
+    if (timers[id]) {
+        clearInterval(timers[id]);
+    }
+
+    if (isPaused[id]) {
+        startTimes[id] = new Date(new Date() - elapsedTime[id]);
+        isPaused[id] = false;
+    } else if (!startTimes[id] || startTimes[id].getTime() === new Date('1970-01-01T00:00:00Z').getTime()) {
+        startTimes[id] = new Date();
+        elapsedTime[id] = 0;
+    }
+
+    document.getElementById(`startTime${id}`).innerText = formatTime(startTimes[id]);
+
+    timers[id] = setInterval(function() {
+        let now = new Date();
+        let elapsed = new Date(now - startTimes[id]);
+        let hours = String(elapsed.getUTCHours()).padStart(2, '0');
+        let minutes = String(elapsed.getUTCMinutes()).padStart(2, '0');
+        let seconds = String(elapsed.getUTCSeconds()).padStart(2, '0');
+        document.getElementById(`duration${id}`).innerText = `${hours}:${minutes}:${seconds}`;
+    }, 1000);
+
+    saveToLocalStorage(id, startTimes[id].toISOString(), elapsedTime[id], isPaused[id]);
+    saveButtonStatus(id, 'start');
+    updateButtonStyles(id, 'start');
+}
+
+function updateStopwatchDisplay(id) {
+    let now = new Date();
+    let elapsed = new Date(now - startTimes[id]);
+    let hours = String(elapsed.getUTCHours()).padStart(2, '0');
+    let minutes = String(elapsed.getUTCMinutes()).padStart(2, '0');
+    let seconds = String(elapsed.getUTCSeconds()).padStart(2, '0');
+    document.getElementById(`duration${id}`).innerText = `${hours}:${minutes}:${seconds}`;
+}
+
+function updateStartTime(id) {
+    const startTime = formatTime(new Date());
+    const endTime = "00:00:00";
+
+    $.ajax({
+        url: 'update-start-time.php',
+        type: 'POST',
+        data: { id: id, START_TIME: startTime },
+        success: function(response) {
+            if (response.trim() === 'Success') {
+                document.getElementById(`startTime${id}`).innerText = startTime;
+                $(`input[name="START_TIME"][data-id="${id}"]`).val(startTime);
+                $(`td[data-id="${id}"][data-field="status"]`).removeClass('status-red status-green status-neutral').html('');
+                startStopwatch(id);
+            } else {
+                alert('Failed to update start time: ' + response);
+            }
+        },
+        error: function() {
+            alert('Failed to update start time');
+        }
+    });
+
+    $.ajax({
+        url: 'update-end-time.php',
+        type: 'POST',
+        data: { id: id, END_TIME: endTime },
+        success: function(response) {
+            if (response.trim() === 'Success') {
+                document.getElementById(`endTime${id}`).innerText = endTime;
+                $(`input[name="END_TIME"][data-id="${id}"]`).val(endTime);
+            } else {
+                alert('Failed to reset end time: ' + response);
+            }
+        },
+        error: function() {
+            alert('Failed to reset end time');
+        }
+    });
+
+    saveButtonStatus(id, 'start');
+    updateButtonStyles(id, 'start');
+}
+
+function pauseStopwatch(id) {
+    if (timers[id]) {
+        clearInterval(timers[id]);
+    }
+
+    pausedAt[id] = new Date();
+    elapsedTime[id] = pausedAt[id] - startTimes[id];
+    isPaused[id] = true;
+
+    updateStopwatchDisplay(id);
+
+    saveButtonStatus(id, 'pause');
+    updateButtonStyles(id, 'pause');
+
+    saveToLocalStorage(id, startTimes[id].toISOString(), elapsedTime[id], isPaused[id]);
+}
+
+function updateEndTime(id) {
+    const endTime = formatTime(new Date());
+    document.getElementById(`endTime${id}`).innerText = endTime;
+    $(`input[name="END_TIME"][data-id="${id}"]`).val(endTime);
+
+    clearInterval(timers[id]);
+    let duration = document.getElementById(`duration${id}`).innerText;
+
+    $.ajax({
+        url: 'update-end-time.php',
+        type: 'POST',
+        data: { id: id, END_TIME: endTime, DURATION: duration },
+        success: function(response) {
+            if (response.trim() === 'Success') {
+                sendDurationToServer(id, duration);
+                updateStatus(id, duration);
+                saveButtonStatus(id, 'end');
+                updateButtonStyles(id, 'end');
+            } else {
+                alert('Failed to update end time: ' + response);
+            }
+        },
+        error: function() {
+            alert('Failed to update end time');
+        }
+    });
+}
+
+function updateButtonStyles(id, status) {
+    let startButton = document.getElementById(`startButton${id}`);
+    let pauseButton = document.getElementById(`pauseButton${id}`);
+    let endButton = document.getElementById(`endButton${id}`);
+
+    startButton.className = 'btn-action start-button';
+    pauseButton.className = 'btn-action pause-button';
+    endButton.className = 'btn-action end-button';
+
+    switch (status) {
+        case 'start':
+            startButton.classList.add('start-active');
+            pauseButton.classList.add('inactive');
+            endButton.classList.add('inactive');
+            break;
+        case 'pause':
+            startButton.classList.add('inactive');
+            pauseButton.classList.add('pause-active');
+            endButton.classList.add('inactive');
+            break;
+        case 'end':
+            startButton.classList.add('inactive');
+            pauseButton.classList.add('inactive');
+            endButton.classList.add('end-active');
+            break;
+        default:
+            startButton.classList.add('inactive');
+            pauseButton.classList.add('inactive');
+            endButton.classList.add('inactive');
+            break;
+    }
+}
+
+function diffTime(startTime, endTime) {
+    let start = new Date(`1970-01-01T${startTime}Z`);
+    let end = new Date(`1970-01-01T${endTime}Z`);
+    if (isNaN(start) || isNaN(end)) {
+        console.error(`Invalid time format: start=${startTime}, end=${endTime}`);
+        return "Invalid Time";
+    }
+
+    let diffMs = end - start;
+    let hours = Math.floor(diffMs / 3600000);
+    let minutes = Math.floor((diffMs % 3600000) / 60000);
+    let seconds = Math.floor((diffMs % 60000) / 1000);
+
+    hours = hours < 0 ? 24 + hours : hours;  // handle cases where end time is past midnight
+    hours = String(hours).padStart(2, '0');
+    minutes = String(minutes).padStart(2, '0');
+    seconds = String(seconds).padStart(2, '0');
+
+    return `${hours}:${minutes}:${seconds}`;
+}
+
+function sendDurationToServer(id, duration) {
+    $.ajax({
+        url: 'update-duration.php',
+        type: 'POST',
+        data: { id: id, DURATION: duration },
+        success: function(response) {
+            console.log(`Duration for ID ${id} sent to server: ${duration}`);
+        },
+        error: function() {
+            console.error(`Failed to send duration for ID ${id}`);
+        }
+    });
+}
+
+function updateStatus(id, duration) {
+    let est = $(`input[name="EST"][data-id="${id}"]`).val();
+    if (!est) {
+        console.error(`EST value is missing for ID ${id}`);
+        return;
+    }
+
+    let estTime = new Date(`1970-01-01T${est}Z`);
+    let durationTime = new Date(`1970-01-01T${duration}Z`);
+
+    let estSeconds = estTime.getHours() * 3600 + estTime.getMinutes() * 60 + estTime.getSeconds();
+    let durationSeconds = durationTime.getHours() * 3600 + durationTime.getMinutes() * 60 + durationTime.getSeconds();
+
+    let statusElement = $(`td[data-id="${id}"][data-field="status"]`);
+    let status;
+
+    if (durationSeconds > estSeconds) {
+        let diff = durationSeconds - estSeconds;
+        let diffHours = Math.floor(diff / 3600);
+        let diffMinutes = Math.floor((diff % 3600) / 60);
+        status = `${diffHours}h ${diffMinutes}m over`;
+        statusElement.removeClass('status-green').addClass('status-red');
+    } else {
+        let diff = estSeconds - durationSeconds;
+        let diffHours = Math.floor(diff / 3600);
+        let diffMinutes = Math.floor((diff % 3600) / 60);
+        status = `${diffHours}h ${diffMinutes}m under`;
+        statusElement.removeClass('status-red').addClass('status-green');
+    }
+
+    statusElement.text(status);
+    saveToLocalStorage(id, startTimes[id].toISOString(), elapsedTime[id], isPaused[id]);
+}
+
+function resetStopwatch(id) {
+    if (timers[id]) {
+        clearInterval(timers[id]);
+    }
+
+    startTimes[id] = new Date('1970-01-01T00:00:00Z');
+    elapsedTime[id] = 0;
+    isPaused[id] = false;
+
+    document.getElementById(`startTime${id}`).innerText = '00:00:00';
+    document.getElementById(`endTime${id}`).innerText = '00:00:00';
+    document.getElementById(`duration${id}`).innerText = '00:00:00';
+    
+    saveButtonStatus(id, 'inactive');
+    updateButtonStyles(id, 'inactive');
+
+    localStorage.removeItem(`stopwatch_${id}`);
+    localStorage.removeItem(`button_status_${id}`);
+}
+
+function initializeStopwatch(id) {
+    loadFromLocalStorage(id);
+    $(`#resetButton${id}`).click(function() {
+        resetStopwatch(id);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    feather.replace();
+    document.querySelectorAll('.stopwatch').forEach((element) => {
+        const id = element.dataset.id;
+        initializeStopwatch(id);
+    });
+});
+
+    </script>
 </body>
 </html>

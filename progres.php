@@ -5,7 +5,8 @@
     $machineFilter = isset($_GET['machine']) ? $_GET['machine'] : '';
     $nopFilter = isset($_GET['nop']) ? $_GET['nop'] : '';
 
-    $query = "SELECT * FROM data WHERE START_TIME IS NOT NULL AND END_TIME IS NOT NULL";
+    $query = "SELECT * FROM data WHERE START_TIME IS NOT NULL AND START_TIME != ''";
+    $query .= " AND (END_TIME IS NULL OR END_TIME = '')";
 
     if ($processFilter) {
         $query .= " AND PROCESS = '$processFilter'";
@@ -17,7 +18,7 @@
         $query .= " AND NOP = '$nopFilter'";
     }
 
-    $query .= " AND START_TIME != '' AND END_TIME != ''";
+    $query .= " ORDER BY PRIORITAS DESC, id ASC";
     $result = mysqli_query($db, $query);
 
     if (!$result) {
@@ -30,7 +31,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HALAMAN ARSIP</title>
+    <title>HALAMAN PROGRES</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
@@ -38,7 +39,7 @@
 </head>
 <body>
     <nav class="navbar">
-        <a href="#" class="navbar-logo">Archieve<span> Data</span>.</a>
+        <a href="#" class="navbar-logo">Data<span> Processing</span>.</a>
         <div class="navbar-nav">
             <div class="menu">
                 <a href="./index.php">Home<i data-feather="home" class="home-item"></i></a>
@@ -48,18 +49,18 @@
             </div>
             <div class="add">
                 <a href="./tambah-data.php">Add Data<i data-feather="plus-square" class="add-item"></i></a>
+            </div>
             <div class="empty">
                 <a href="./kosong-data.php">Empty Data Time<i data-feather="file-minus" class="add-item"></i></a>
             </div>
-            </div>
-            <div class="proses">
-                <a href="./progres.php">Process<i data-feather="clock" class="add-item"></i></a>
+            <div class="arsip">
+                <a href="./arsip.php">Archive<i data-feather="archive" class="archive-item"></i></a>
             </div>
             <div class="excel">
-                <a href="cetak-excel.php?<?php echo http_build_query($_GET); ?>" target="_blank">Download Excel<i data-feather="table" class="excel-item"></i></a>
+                <a href="excel-progres.php?<?php echo http_build_query($_GET); ?>" target="_blank">Download Excel<i data-feather="table" class="excel-item"></i></a>
             </div>
             <div class="word">
-                <a href="cetak-pdf.php?<?php echo http_build_query($_GET); ?>" target="_blank">Download Word<i data-feather="file-text" class="word-item"></i></a>
+                <a href="pdf-progres.php?<?php echo http_build_query($_GET); ?>" target="_blank">Download Word<i data-feather="file-text" class="word-item"></i></a>
             </div>
         </div>
         <div class="navbar-extra">
@@ -73,11 +74,11 @@
                         <label for="processFilter" class="form-label">Filter PROCESS</label>
                         <select id="processFilter" name="process" class="form-control">
                             <option value="">--- All PROCESS ---</option>
-                            <option value="BUBUT" <?php if ($processFilter == 'BUBUT') echo 'selected'; ?>>BUBUT</option>
-                            <option value="CNC" <?php if ($processFilter == 'CNC') echo 'selected'; ?>>CNC</option>
-                            <option value="EDM" <?php if ($processFilter == 'EDM') echo 'selected'; ?>>EDM</option>
-                            <option value="MANUAL" <?php if ($processFilter == 'MANUAL') echo 'selected'; ?>>MANUAL</option>
-                            <option value="WIRECUT" <?php if ($processFilter == 'WIRECUT') echo 'selected'; ?>>WIRECUT</option>
+                            <option value="BUBUT" <?php if($processFilter == 'BUBUT') echo 'selected'; ?>>BUBUT</option>
+                            <option value="CNC" <?php if($processFilter == 'CNC') echo 'selected'; ?>>CNC</option>
+                            <option value="EDM" <?php if($processFilter == 'EDM') echo 'selected'; ?>>EDM</option>
+                            <option value="MANUAL" <?php if($processFilter == 'MANUAL') echo 'selected'; ?>>MANUAL</option>
+                            <option value="WIRECUT" <?php if($processFilter == 'WIRECUT') echo 'selected'; ?>>WIRECUT</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -120,19 +121,19 @@
                         <label for="nopFilter" class="form-label">Filter NOP</label>
                         <select id="nopFilter" name="nop" class="form-control">
                             <option value="">--- All NOP ---</option>
-                            <option value="red" <?php if ($nopFilter == 'red') echo 'selected'; ?>>Red</option>
-                            <option value="green" <?php if ($nopFilter == 'green') echo 'selected'; ?>>Green</option>
-                            <option value="blue" <?php if ($nopFilter == 'blue') echo 'selected'; ?>>Blue</option>
+                            <option value="red" <?php if($nopFilter == 'red') echo 'selected'; ?>>Red</option>
+                            <option value="green" <?php if($nopFilter == 'green') echo 'selected'; ?>>Green</option>
+                            <option value="blue" <?php if($nopFilter == 'blue') echo 'selected'; ?>>Blue</option>
                         </select>
                     </div>
                     <div class="submit-container">
                         <button type="submit" class="btn btn-primary mt-3">Submit</button>
                     </div>
+                    
                 </form>
             </label>
         </div>
     </nav>
-
     <div class="container">
         <table class="table">
             <thead>
@@ -151,10 +152,11 @@
                     <th scope="col" class="duration">DURATION</th>
                     <th scope="col" class="status">STATUS</th>
                     <th scope="col" class="remark">REMARK</th>
+                    <th scope="col" class="prioritas">PRIORITAS</th>
                 </tr>
             </thead>
             <tbody>
-                <?php while ($data = mysqli_fetch_assoc($result)) {
+                <?php foreach ($result as $data) {
                     $durationParts = explode(' ', $data["DURATION"]);
                     if (count($durationParts) >= 4) {
                         $durationHours = intval($durationParts[0]);
@@ -179,36 +181,45 @@
                     $diffHours = floor($absDiffMinutes / 60);
                     $diffMinutes = $absDiffMinutes % 60;
 
-                    $statusClass = $durationMinutesTotal > $estMinutesTotal ? 'status-red' : 'status-green';
-                    $statusText = $durationMinutesTotal > $estMinutesTotal ?
-                        "WAKTU LEBIH <br> $diffHours jam, $diffMinutes menit" :
-                        "WAKTU CUKUP <br> $diffHours jam, $diffMinutes menit";
+                    $statusClass = 'status-green';
+                    $statusText = "Sedang Diproses";
                 ?>
-                    <tr>
-                        <td class="process"><?php echo htmlspecialchars($data["PROCESS"]); ?></td>
-                        <td class="machine"><?php echo htmlspecialchars($data["MACHINE"]); ?></td>
-                        <td class="part"><?php echo htmlspecialchars($data["PART_NAME"]); ?></td>
-                        <td class="material"><?php echo htmlspecialchars($data["MATERIAL"]); ?></td>
-                        <td class="pos"><?php echo htmlspecialchars($data["POS"]); ?></td>
-                        <td class="qty"><?php echo htmlspecialchars($data["QTY"]); ?></td>
-                        <td class="nop"><?php echo htmlspecialchars($data["NOP"]); ?></td>
-                        <td class="est"><?php echo htmlspecialchars($data["EST"]); ?></td>
-                        <td class="date"><?php echo htmlspecialchars($data["DATE"]); ?></td>
-                        <td class="start"><?php echo htmlspecialchars($data["START_TIME"]); ?></td>
-                        <td class="end"><?php echo htmlspecialchars($data["END_TIME"]); ?></td>
-                        <td class="duration"><?php echo htmlspecialchars($data["DURATION"]); ?></td>
-                        <td class="<?php echo $statusClass; ?>"><?php echo $statusText; ?></td>
-                        <td class="remark"><?php echo htmlspecialchars($data["REMARK"]); ?></td>
-                    </tr>
-                <?php } ?>
+                <tr>
+                    <td class="process"><?php echo htmlspecialchars($data["PROCESS"]); ?></td>
+                    <td class="machine"><?php echo htmlspecialchars($data["MACHINE"]); ?></td>
+                    <td class="part"><?php echo htmlspecialchars($data["PART_NAME"]); ?></td>
+                    <td class="material"><?php echo htmlspecialchars($data["MATERIAL"]); ?></td>
+                    <td class="pos"><?php echo htmlspecialchars($data["POS"]); ?></td>
+                    <td class="qty"><?php echo htmlspecialchars($data["QTY"]); ?></td>
+                    <td class="nop"><?php echo htmlspecialchars($data["NOP"]); ?></td>
+                    <td class="est" data-field="est"><?php echo htmlspecialchars($data["EST"]); ?></td>
+                    <td class="date">
+                        <input type="date" name="DATE" class="form-control" data-id="<?php echo $data["id"]; ?>" value="<?php echo date('Y-m-d', strtotime($data['DATE'])); ?>">
+                    </td>
+                    <td class="start">
+                        <input type="datetime-local" name="START_TIME" class="form-control" data-id="<?php echo $data["id"]; ?>" value="<?php echo date('Y-m-d\TH:i', strtotime($data['START_TIME'])); ?>">
+                    </td>
+                    <td class="end">
+                        <input type="datetime-local" name="END_TIME" class="form-control" data-id="<?php echo $data["id"]; ?>" value="<?php echo date('Y-m-d\TH:i', strtotime($data['END_TIME'])); ?>">
+                    </td>
+                    <td class="duration" data-id="<?php echo $data['id']; ?>" data-field="duration">
+                        <?php echo htmlspecialchars($data["DURATION"]); ?>
+                    </td>
+                    <td data-id="<?php echo $data['id']; ?>" data-field="status" class="<?php echo $statusClass; ?>">
+                        <?php echo $statusText; ?>
+                    </td>
+                    <td class="remark"><?php echo htmlspecialchars($data["REMARK"]); ?></td>
+                    <td class="prioritas" style="color: red; font-weight: bold;"><?php echo htmlspecialchars($data["PRIORITAS"]); ?></td>
+                </tr>
+            <?php } ?>
             </tbody>
         </table>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-1MtbIsyU+mg1Xy5Z2pIvGSKXixbJz4lAxj5xVuf7B7OfRmiH2c2o6ZxfIUlHs5EO5" crossorigin="anonymous"></script>
+    <script>feather.replace();</script>
     <script src="./script.js"></script>
     <script src="./style.js"></script>
     <script src="./javascript.js"></script>
-    <script> feather.replace();</script>
 </body>
 </html>

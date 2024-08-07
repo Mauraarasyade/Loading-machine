@@ -57,7 +57,6 @@ body {
     color: var(--primary);
 }
 
-/* Navbar filter Form */
 .navbar .filter-form {
     position: absolute;
     top: 100%;
@@ -200,7 +199,7 @@ body {
     min-width: 130px;
 }
 
-.est, .duration, .status, .prioritas {
+.est, .duration, .status, .prioritas, .date {
     min-width: 150px;
 }
 
@@ -225,29 +224,19 @@ body {
 .status-green {
     color: green !important;
 }
-
-/* Opsi warna */
-.gmc-option {
-    color: blue;
-}
-.gec-option {
-    color: green;
-}
-.gdc-option {
-    color: yellow;
-}
-
-/* Warna latar belakang elemen select berdasarkan pilihan */
-.select-gmc {
-    background-color: blue;
-    color: white;
-}
-.select-gec {
-    background-color: green;
-    color: white;
-}
-.select-gdc {
-    background-color: yellow;
+.status-neutral {
     color: black;
 }
 
+.gmc-option {
+    background-color: white;
+    color: blue;
+}
+.gec-option {
+    background-color: white;
+    color: green;
+}
+.gdc-option {
+    background-color: white;
+    color: brown;
+}

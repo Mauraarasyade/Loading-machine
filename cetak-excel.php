@@ -27,7 +27,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOADING MACHINE</title>
+    <title>CETAK EXCEL</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 </head>
 <body>
@@ -45,6 +45,7 @@
                     <th scope="col">QTY</th>
                     <th scope="col">NOP</th>
                     <th scope="col">EST</th>
+                    <th scope="col">DATE</th>
                     <th scope="col">START TIME</th>
                     <th scope="col">END TIME</th>
                     <th scope="col">DURATION</th>
@@ -64,6 +65,7 @@
                         <td><?php echo $data["QTY"] ?></td>
                         <td><?php echo $data["NOP"] ?></td>
                         <td><?php echo $data["EST"] ?></td>
+                        <td><?php echo $data["DATE"] ?></td>
                         <td><?php echo $data["START_TIME"] ?></td>
                         <td><?php echo $data["END_TIME"] ?></td>
                         <td><?php echo $data["DURATION"] ?></td>

@@ -4,8 +4,9 @@
     $processFilter = isset($_GET['process']) ? $_GET['process'] : '';
     $machineFilter = isset($_GET['machine']) ? $_GET['machine'] : '';
     $nopFilter = isset($_GET['nop']) ? $_GET['nop'] : '';
-
-    $query = "SELECT * FROM data WHERE 1=1";
+    
+    $query = "SELECT * FROM data WHERE START_TIME IS NOT NULL AND START_TIME != ''";
+    $query .= " AND (END_TIME IS NULL OR END_TIME = '')";
     if ($processFilter != '') {
         $query .= " AND PROCESS='$processFilter'";
     }
@@ -17,6 +18,9 @@
     }
     $query .= " ORDER BY PRIORITAS DESC, id ASC";
     $result = mysqli_query($db, $query);
+
+    header("Content-Type: application/vnd-ms-excel");
+    header("Content-Disposition: attachment; filename=loading_machine.xls");
 ?>
 
 <!DOCTYPE html>
@@ -24,13 +28,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CETAK PDF</title>
+    <title>CETAK EXCEL</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="./style.css">
 </head>
 <body>
     <div class="container w-10">
-        <h1 class="my-4" align="center">LAPORAN LOADING MACHINE</h1>
+        <h1 class="my-4" align="center">LAPORAN DATA PROCESSING</h1>
 
         <table class="table">
             <thead>
@@ -53,7 +56,34 @@
                 </tr>
             </thead>
             <tbody>
-                <?php while($data = mysqli_fetch_assoc($result)) { ?>
+            <?php foreach ($result as $data) {
+                    $durationParts = explode(' ', $data["DURATION"]);
+                    if (count($durationParts) >= 4) {
+                        $durationHours = intval($durationParts[0]);
+                        $durationMinutes = intval($durationParts[2]);
+                        $durationMinutesTotal = ($durationHours * 60) + $durationMinutes;
+                    } else {
+                        $durationMinutesTotal = 0;
+                    }
+
+                    $estParts = explode(' ', $data["EST"]);
+                    if (count($estParts) >= 4) {
+                        $estHours = intval($estParts[0]);
+                        $estMinutes = intval($estParts[2]);
+                        $estMinutesTotal = ($estHours * 60) + $estMinutes;
+                    } else {
+                        $estMinutesTotal = 0;
+                    }
+
+                    $diffMinutes = $durationMinutesTotal - $estMinutesTotal;
+                    $absDiffMinutes = abs($diffMinutes);
+
+                    $diffHours = floor($absDiffMinutes / 60);
+                    $diffMinutes = $absDiffMinutes % 60;
+
+                    $statusClass = 'status-green';
+                    $statusText = "Sedang Diproses";
+                ?>
                     <tr>
                         <td><?php echo $data["PROCESS"] ?></td>
                         <td><?php echo $data["MACHINE"] ?></td>
@@ -67,7 +97,9 @@
                         <td><?php echo $data["START_TIME"] ?></td>
                         <td><?php echo $data["END_TIME"] ?></td>
                         <td><?php echo $data["DURATION"] ?></td>
-                        <td><?php echo $data["STATUS"] ?></td>
+                        <td data-id="<?php echo $data['id']; ?>" data-field="status" class="<?php echo $statusClass; ?>">
+                            <?php echo $statusText; ?>
+                        </td>
                         <td><?php echo $data["REMARK"] ?></td>
                         <td><?php echo $data["PRIORITAS"] ?></td>
                     </tr>
@@ -75,9 +107,5 @@
             </tbody>
         </table>
     </div>
-
-    <script type="text/javascript">
-        window.print();
-    </script>
 </body>
 </html>

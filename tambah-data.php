@@ -1,22 +1,23 @@
 <?php
     include_once("./koneksi.php");
 
-    if(isset($_POST["submit"])){
+    if (isset($_POST["submit"])) {
         $PART_NAME = $_POST["PART_NAME"];
         $MATERIAL = $_POST["MATERIAL"];
         $POS = $_POST["POS"];
         $QTY = $_POST["QTY"];
         $NOP = $_POST["NOP"];
-        $EST_HOURS = intval($_POST["EST_HOURS"]);
-        $EST_MINUTES = intval($_POST["EST_MINUTES"]);
-        $EST = sprintf('%d jam, %d menit', $EST_HOURS, $EST_MINUTES);
+        $EST_HOURS = str_pad(intval($_POST["EST_HOURS"]), 2, '0', STR_PAD_LEFT);
+        $EST_MINUTES = str_pad(intval($_POST["EST_MINUTES"]), 2, '0', STR_PAD_LEFT);
+        $EST_SECONDS = str_pad(intval($_POST["EST_SECONDS"]), 2, '0', STR_PAD_LEFT);
+        $EST = sprintf('%s:%s:%s', $EST_HOURS, $EST_MINUTES, $EST_SECONDS);
         $REMARK = $_POST["REMARK"];
         $PRIORITAS = $_POST["PRIORITAS"];
 
         $query = mysqli_query($db, "INSERT INTO data (PART_NAME, MATERIAL, POS, QTY, NOP, EST, REMARK, PRIORITAS)
         VALUES ('$PART_NAME', '$MATERIAL', '$POS', '$QTY', '$NOP', '$EST', '$REMARK', '$PRIORITAS')");
         
-        if($query) {
+        if ($query) {
             echo "
             <script>
                 alert('Data Berhasil Di simpan');
@@ -26,7 +27,7 @@
             echo "<script>
             alert('Data Gagal Di simpan');
             window.location.href='data.php';
-        </script>" . mysqli_error($db);
+            </script>" . mysqli_error($db);
         }
     }
 ?>
@@ -56,7 +57,7 @@
             margin-right: 10px;
         }
         .form-inline select {
-            width: 367px;
+            width: 240px;
         }
     </style>
 </head>
@@ -90,15 +91,22 @@
                     <div class="form-inline">
                         <div class="form-group">
                             <select required name="EST_HOURS" class="form-control" id="EST_HOURS">
-                                <?php for ($i = 0; $i <= 1000; $i++): ?>
-                                    <option value="<?php echo $i; ?>"><?php echo $i; ?> jam</option>
+                                <?php for ($i = 0; $i < 24; $i++): ?>
+                                    <option value="<?php echo $i; ?>"><?php echo sprintf('%2d', $i); ?> jam</option>
                                 <?php endfor; ?>
                             </select>
                         </div>
                         <div class="form-group">
                             <select required name="EST_MINUTES" class="form-control" id="EST_MINUTES">
                                 <?php for ($i = 0; $i < 60; $i++): ?>
-                                    <option value="<?php echo $i; ?>"><?php echo $i; ?> menit</option>
+                                    <option value="<?php echo $i; ?>"><?php echo sprintf('%2d', $i); ?> menit</option>
+                                <?php endfor; ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <select required name="EST_SECONDS" class="form-control" id="EST_SECONDS">
+                                <?php for ($i = 0; $i < 60; $i++): ?>
+                                    <option value="<?php echo $i; ?>"><?php echo sprintf('%2d', $i); ?> detik</option>
                                 <?php endfor; ?>
                             </select>
                         </div>
