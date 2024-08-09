@@ -17,11 +17,8 @@
             }
 
             if (mysqli_query($db, $query)) {
-                echo "
-                    <script>
-                        alert('Data Berhasil Diupdate');
-                        window.location.href='data.php';
-                    </script>";
+                header('Location: data.php');
+                exit;
             } else {
                 echo 'Error: ' . mysqli_error($db);
             }

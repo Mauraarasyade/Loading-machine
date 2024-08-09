@@ -40,41 +40,30 @@
         .btn-action {
             border: none;
             background-color: white;
+            color: blue;
             font-size: 16px;
             cursor: pointer;
-            transition: color 0.4s;
+            transition: color 0.5s;
         }
 
-        .btn-action.start-button {
-            background-color: white;
-            color: grey;
-        }
         .start-active {
             background-color: white;
-            color: green !important;
+            color: green;
+        }
+
+        .pause-active {
+            background-color: white;
+            color: orange;
+        }
+
+        .end-active {
+            background-color: white;
+            color: red;
         }
 
         .inactive {
             background-color: white;
-            color:black !important;
-        }
-
-        .btn-action.pause-button {
-            background-color: white;
-            color: grey;
-        }
-        .pause-active {
-            background-color: white;
-            color: orange !important;
-        }
-
-        .btn-action.end-button {
-            background-color: white;
-            color: grey;
-        }
-        .end-active {
-            background-color: white;
-            color: red !important;
+            color: black;
         }
     </style>
 </head>
@@ -219,10 +208,10 @@
                         $diffMinutes = floor(($absDiffSeconds % 3600) / 60);
                         $diffSecondsFinal = $absDiffSeconds % 60;
 
-                        if ((empty($data["START_TIME"]) || $data["START_TIME"] === '00:00:00') && (empty($data["END_TIME"]) || $data["END_TIME"] === '00:00:00')) {
+                        if (empty($data["START_TIME"]) || $data["START_TIME"] === '00:00:00' && empty($data["END_TIME"]) || $data["END_TIME"] === '00:00:00') {
                             $statusClass = 'status-red';
                             $statusText = "Belum Diproses";
-                        } elseif (!empty($data["START_TIME"]) && (empty($data["END_TIME"]) || $data["END_TIME"] === '00:00:00')) {
+                        } elseif (!empty($data["START_TIME"]) && empty($data["END_TIME"])) {
                             $statusClass = 'status-green';
                             $statusText = "Sedang Diproses";
                         } elseif (!empty($data["START_TIME"]) && !empty($data["END_TIME"])) {
@@ -342,244 +331,237 @@
     <script src="./style.js"></script>
     <script src="./javascript.js"></script>
     <script>
-    let timers = {};
-    let startTimes = {};
-    let elapsedTime = {};
-    let isPaused = {};
-    let prioritas = {};
+        let timers = {};
+        let startTimes = {};
+        let elapsedTime = {};
+        let pausedAt = {};
+        let isPaused = {};
 
-    function formatTime(date) {
-        let hours = date.getUTCHours().toString().padStart(2, '0');
-        let minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        let seconds = date.getUTCSeconds().toString().padStart(2, '0');
-        return `${hours}:${minutes}:${seconds}`;
-    }
+        function formatTime(date) {
+            let hours = date.getHours().toString().padStart(2, '0');
+            let minutes = date.getMinutes().toString().padStart(2, '0');
+            let seconds = date.getSeconds().toString().padStart(2, '0');
+            return ${hours}:${minutes}:${seconds};
+        }
 
-    function saveButtonStatus(id, status) {
-        localStorage.setItem(`button_status_${id}`, status);
-    }
+        function saveButtonStatus(id, status) {
+            localStorage.setItem(button_status_${id}, status);
+        }
 
-    function getButtonStatus(id) {
-        return localStorage.getItem(`button_status_${id}`) || 'inactive';
-    }
+        function getButtonStatus(id) {
+            return localStorage.getItem(button_status_${id}) || 'inactive';
+        }
 
-    function saveToLocalStorage(id, startTime, elapsedTime, isPaused) {
-        const data = {
-            startTime: startTime,
-            elapsedTime: elapsedTime,
-            isPaused: isPaused
-        };
-        localStorage.setItem(`stopwatch_${id}`, JSON.stringify(data));
-    }
+        function saveToLocalStorage(id, startTime, elapsedTime, isPaused) {
+            const data = {
+                startTime: startTime,
+                elapsedTime: elapsedTime,
+                isPaused: isPaused
+            };
+            localStorage.setItem(stopwatch_${id}, JSON.stringify(data));
+        }
 
-    function loadFromLocalStorage(id) {
-        const data = JSON.parse(localStorage.getItem(`stopwatch_${id}`));
-        if (data) {
-            startTimes[id] = data.startTime ? new Date(data.startTime) : new Date('1970-01-01T00:00:00Z');
-            elapsedTime[id] = data.elapsedTime || 0;
-            isPaused[id] = data.isPaused || false;
+        function loadFromLocalStorage(id) {
+            const data = JSON.parse(localStorage.getItem(stopwatch_${id}));
+            if (data) {
+                startTimes[id] = data.startTime ? new Date(data.startTime) : new Date('1970-01-01T00:00:00Z');
+                elapsedTime[id] = data.elapsedTime || 0;
+                isPaused[id] = data.isPaused || false;
 
-            if (!isPaused[id] && getButtonStatus(id) !== 'end') {
-                startStopwatch(id, true);
-            } else if (isPaused[id]) {
-                updateStopwatchDisplay(id);
+                if (startTimes[id]) {
+                    if (!isPaused[id]) {
+                        startStopwatch(id);
+                    } else {
+                        // Jika terpause, sesuaikan waktu mulai
+                        startTimes[id] = new Date(new Date() - elapsedTime[id]);
+                        updateStopwatchDisplay(id);
+                    }
+                }
+            } else {
+                startTimes[id] = new Date('1970-01-01T00:00:00Z');
+                elapsedTime[id] = 0;
+                isPaused[id] = false;
             }
-        } else {
-            startTimes[id] = new Date('1970-01-01T00:00:00Z');
-            elapsedTime[id] = 0;
-            isPaused[id] = false;
+            
+            updateButtonStyles(id, getButtonStatus(id));
         }
 
-        updateButtonStyles(id, getButtonStatus(id));
-    }
+        function startStopwatch(id) {
+            if (timers[id]) {
+                clearInterval(timers[id]);
+            }
 
-    function startStopwatch(id, fromLoad = false) {
-        if (timers[id]) {
-            clearInterval(timers[id]);
+            if (isPaused[id]) {
+                // Jika melanjutkan dari pause
+                startTimes[id] = new Date(new Date() - elapsedTime[id]);
+                isPaused[id] = false;
+            } else {
+                // Jika memulai dari awal
+                startTimes[id] = new Date();
+            }
+
+            timers[id] = setInterval(function() {
+                updateStopwatchDisplay(id);
+            }, 1000);
+
+            saveToLocalStorage(id, startTimes[id], elapsedTime[id], isPaused[id]);
         }
 
-        if (!fromLoad) {
-            startTimes[id] = new Date();
-            elapsedTime[id] = 0;
-            isPaused[id] = false;
-        }
-
-        document.getElementById(`startTime${id}`).innerText = formatTime(startTimes[id]);
-
-        timers[id] = setInterval(function() {
+        function updateStopwatchDisplay(id) {
             let now = new Date();
-            let elapsed = new Date(now - startTimes[id] + elapsedTime[id]);
+            let elapsed = new Date(now - startTimes[id]);
             let hours = String(elapsed.getUTCHours()).padStart(2, '0');
             let minutes = String(elapsed.getUTCMinutes()).padStart(2, '0');
             let seconds = String(elapsed.getUTCSeconds()).padStart(2, '0');
-            document.getElementById(`duration${id}`).innerText = `${hours}:${minutes}:${seconds}`;
-        }, 1000);
-
-        saveToLocalStorage(id, startTimes[id].toISOString(), elapsedTime[id], isPaused[id]);
-        saveButtonStatus(id, 'start');
-        updateButtonStyles(id, 'start');
-    }
-
-    function updateStartTime(id) {
-        const startTime = new Date();
-        $.ajax({
-            url: 'update-start-time.php',
-            type: 'POST',
-            data: { id: id, START_TIME: formatTime(startTime) },
-            success: function(response) {
-                if (response.trim() === 'Success') {
-                    document.getElementById(`startTime${id}`).innerText = formatTime(startTime);
-                    $(`input[name="START_TIME"][data-id="${id}"]`).val(formatTime(startTime));
-                    $(`td[data-id="${id}"][data-field="status"]`).removeClass('status-red status-green status-neutral').html('');
-                    startStopwatch(id);
-                } else {
-                    alert('Failed to update start time: ' + response);
-                }
-            },
-            error: function() {
-                alert('Failed to update start time');
-            }
-        });
-
-        $.ajax({
-            url: 'update-end-time.php',
-            type: 'POST',
-            data: { id: id, END_TIME: "00:00:00" },
-            success: function(response) {
-                if (response.trim() === 'Success') {
-                    document.getElementById(`endTime${id}`).innerText = "00:00:00";
-                    $(`input[name="END_TIME"][data-id="${id}"]`).val("00:00:00");
-                } else {
-                    alert('Failed to reset end time: ' + response);
-                }
-            },
-            error: function() {
-                alert('Failed to reset end time');
-            }
-        });
-
-        saveButtonStatus(id, 'start');
-        updateButtonStyles(id, 'start');
-    }
-
-    function pauseStopwatch(id) {
-        if (timers[id]) {
-            clearInterval(timers[id]);
+            document.getElementById(duration${id}).innerText = ${hours}:${minutes}:${seconds};
         }
 
-        let now = new Date();
-        elapsedTime[id] += now - startTimes[id];
-        isPaused[id] = true;
+        function updateStartTime(id) {
+            const startTime = formatTime(new Date());
+            const endTime = "00:00:00";
 
-        saveToLocalStorage(id, startTimes[id].toISOString(), elapsedTime[id], isPaused[id]);
-        saveButtonStatus(id, 'pause');
-        updateButtonStyles(id, 'pause');
-    }
-
-    function updateEndTime(id) {
-        const endTime = new Date();
-        clearInterval(timers[id]);
-        document.getElementById(`endTime${id}`).innerText = formatTime(endTime);
-        $(`input[name="END_TIME"][data-id="${id}"]`).val(formatTime(endTime));
-
-        let duration = document.getElementById(`duration${id}`).innerText;
-
-        $.ajax({
-            url: 'update-end-time.php',
-            type: 'POST',
-            data: { id: id, END_TIME: formatTime(endTime), DURATION: duration },
-            success: function(response) {
-                if (response.trim() === 'Success') {
-                    sendDurationToServer(id, duration);
-                    updateStatus(id, duration);
-                    saveButtonStatus(id, 'end');
-                    updateButtonStyles(id, 'end');
-                } else {
-                    alert('Failed to update end time: ' + response);
+            $.ajax({
+                url: 'update-start-time.php',
+                type: 'POST',
+                data: { id: id, START_TIME: startTime },
+                success: function(response) {
+                    if (response.trim() === 'Success') {
+                        document.getElementById(startTime${id}).innerText = startTime;
+                        $(input[name="START_TIME"][data-id="${id}"]).val(startTime);
+                        alert('Start time updated successfully');
+                        
+                        // Kosongkan kolom status
+                        $(td[data-id="${id}"][data-field="status"]).removeClass('status-red status-green status-neutral').html('');
+                    } else {
+                        alert('Failed to update start time: ' + response);
+                    }
+                },
+                error: function() {
+                    alert('Failed to update start time');
                 }
-            },
-            error: function() {
-                alert('Failed to update end time');
-            }
-        });
-    }
+            });
 
-    function updateStopwatchDisplay(id) {
-        let now = new Date();
-        let elapsed = new Date(now - startTimes[id] + elapsedTime[id]);
-        let hours = String(elapsed.getUTCHours()).padStart(2, '0');
-        let minutes = String(elapsed.getUTCMinutes()).padStart(2, '0');
-        let seconds = String(elapsed.getUTCSeconds()).padStart(2, '0');
-        document.getElementById(`duration${id}`).innerText = `${hours}:${minutes}:${seconds}`;
-    }
+            $.ajax({
+                url: 'update-end-time.php',
+                type: 'POST',
+                data: { id: id, END_TIME: endTime },
+                success: function(response) {
+                    if (response.trim() === 'Success') {
+                        document.getElementById(endTime${id}).innerText = endTime;
+                        $(input[name="END_TIME"][data-id="${id}"]).val(endTime);
+                    } else {
+                        alert('Failed to reset end time: ' + response);
+                    }
+                },
+                error: function() {
+                    alert('Failed to reset end time');
+                }
+            });
 
-    function updateButtonStyles(id, status) {
-        let startButton = document.getElementById(`startButton${id}`);
-        let pauseButton = document.getElementById(`pauseButton${id}`);
-        let endButton = document.getElementById(`endButton${id}`);
+            startStopwatch(id);
 
-        startButton.className = 'btn-action start-button';
-        pauseButton.className = 'btn-action pause-button';
-        endButton.className = 'btn-action end-button';
+            $(button[data-id="${id}"].start-button).addClass('start-active').removeClass('inactive pause-active end-active');
+            $(button[data-id="${id}"].pause-button).removeClass('pause-active start-active end-active').addClass('inactive');
+            $(button[data-id="${id}"].end-button).removeClass('end-active start-active pause-active').addClass('inactive');
 
-        switch (status) {
-            case 'start':
-                startButton.classList.add('start-active');
-                pauseButton.classList.add('inactive');
-                endButton.classList.add('inactive');
-                break;
-            case 'pause':
-                startButton.classList.add('inactive');
-                pauseButton.classList.add('pause-active');
-                endButton.classList.add('inactive');
-                break;
-            case 'end':
-                startButton.classList.add('inactive');
-                pauseButton.classList.add('inactive');
-                endButton.classList.add('end-active');
-                break;
-            default:
-                startButton.classList.add('btn-action.start-button');
-                pauseButton.classList.add('btn-action.pause-button');
-                endButton.classList.add('btn-action.end-button');
-                break;
+            saveButtonStatus(id, 'start');
         }
-    }
 
-    function diffTime(startTime, endTime) {
-        let start = new Date(`1970-01-01T${startTime}Z`);
-        let end = new Date(`1970-01-01T${endTime}Z`);
-        let diffMs = end - start;
-        let hours = Math.floor(diffMs / 3600000);
-        let minutes = Math.floor((diffMs % 3600000) / 60000);
-        let seconds = Math.floor((diffMs % 60000) / 1000);
-
-        hours = hours < 0 ? 24 + hours : hours;
-        hours = String(hours).padStart(2, '0');
-        minutes = String(minutes).padStart(2, '0');
-        seconds = String(seconds).padStart(2, '0');
-
-        return `${hours}:${minutes}:${seconds}`;
-    }
-
-    function sendDurationToServer(id, duration) {
-        $.ajax({
-            url: 'update-duration.php',
-            type: 'POST',
-            data: { id: id, DURATION: duration },
-            success: function(response) {
-                if (response.trim() !== 'Success') {
-                    alert('Failed to update duration: ' + response);
-                }
-            },
-            error: function() {
-                alert('Failed to update duration');
+        function pauseStopwatch(id) {
+            if (timers[id]) {
+                clearInterval(timers[id]);
             }
-        });
-    }
+
+            pausedAt[id] = new Date();
+            elapsedTime[id] = pausedAt[id] - startTimes[id];
+            isPaused[id] = true;
+
+            // Hentikan interval stopwatch dan perbarui tampilan
+            updateStopwatchDisplay(id);
+
+            $(button[data-id="${id}"].pause-button).addClass('pause-active').removeClass('inactive start-active end-active');
+            $(button[data-id="${id}"].start-button).removeClass('start-active pause-active end-active').addClass('inactive');
+            $(button[data-id="${id}"].end-button).removeClass('end-active start-active pause-active').addClass('inactive');
+
+            saveToLocalStorage(id, startTimes[id], elapsedTime[id], isPaused[id]);
+        }
+
+        function updateEndTime(id) {
+            const endTime = formatTime(new Date());
+            const startTime = $(input[name="START_TIME"][data-id="${id}"]).val();
+
+            $.ajax({
+                url: 'update-end-time.php',
+                type: 'POST',
+                data: { id: id, END_TIME: endTime },
+                success: function(response) {
+                    if (response.trim() === 'Success') {
+                        document.getElementById(endTime${id}).innerText = endTime;
+                        $(input[name="END_TIME"][data-id="${id}"]).val(endTime);
+                        if (startTime) {
+                            const duration = calculateDuration(startTime, endTime);
+                            sendDurationToServer(id, duration);
+                            updateStatus(id, duration, startTime, endTime);
+                        }
+                        saveButtonStatus(id, 'end');
+                        updateButtonStyles(id, 'end');
+                    } else {
+                        alert('Failed to update end time: ' + response);
+                    }
+                },
+                error: function() {
+                    alert('Failed to update end time');
+                }
+            });
+
+            if (timers[id]) {
+                clearInterval(timers[id]);
+            }
+
+            document.getElementById(endTime${id}).innerText = endTime;
+            $(input[name="END_TIME"][data-id="${id}"]).val(endTime);
+
+            updateButtonStyles(id, 'end');
+
+            saveToLocalStorage(id, startTimes[id], elapsedTime[id], isPaused[id]);
+        }
+
+        function updateButtonStyles(id, status) {
+            const buttonStatus = getButtonStatus(id);
+
+            if (buttonStatus === 'end') {
+                $(button[data-id="${id}"].end-button).addClass('end-active').removeClass('inactive start-active pause-active');
+                $(button[data-id="${id}"].start-button).removeClass('start-active pause-active end-active').addClass('inactive');
+                $(button[data-id="${id}"].pause-button).removeClass('pause-active start-active end-active').addClass('inactive');
+            } else if (buttonStatus === 'pause') {
+                $(button[data-id="${id}"].pause-button).addClass('pause-active').removeClass('inactive start-active end-active');
+                $(button[data-id="${id}"].start-button).removeClass('start-active pause-active end-active').addClass('inactive');
+                $(button[data-id="${id}"].end-button).removeClass('end-active start-active pause-active').addClass('inactive');
+            } else {
+                $(button[data-id="${id}"].start-button).addClass('start-active').removeClass('inactive pause-active end-active');
+                $(button[data-id="${id}"].pause-button).removeClass('pause-active start-active end-active').addClass('inactive');
+                $(button[data-id="${id}"].end-button).removeClass('end-active start-active pause-active').addClass('inactive');
+            }
+        }
+
+        function calculateDuration(startTime, endTime) {
+            let start = new Date(1970-01-01T${startTime}Z);
+            let end = new Date(1970-01-01T${endTime}Z);
+
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                console.error('Invalid start or end time:', startTime, endTime);
+                return '00:00:00';
+            }
+
+            let duration = new Date(end - start);
+            let hours = String(duration.getUTCHours()).padStart(2, '0');
+            let minutes = String(duration.getUTCMinutes()).padStart(2, '0');
+            let seconds = String(duration.getUTCSeconds()).padStart(2, '0');
+            return ${hours}:${minutes}:${seconds};
+        }
 
         function updateStatus(id, duration, startTime, endTime) {
-            const est = $(`td[data-id="${id}"][data-field="est"]`).text();
+            const est = $(td[data-id="${id}"][data-field="est"]).text();
 
             const durationParts = duration.split(':');
             const durationHours = parseInt(durationParts[0], 10) || 0;
@@ -603,37 +585,26 @@
             let statusText = '';
             let statusClass = '';
 
-            if ((startTime === '' || startTime === '00:00:00') && (endTime === '' || endTime === '00:00:00')) {
+            if (diffSeconds > 0) {
                 statusClass = 'status-red';
-                statusText = 'Belum Diproses';
-            } else if (startTime !== '' && (endTime === '' || endTime === '00:00:00')) {
+                statusText = WAKTU LEBIH <br> ${diffHours} jam, ${diffMinutes} menit,<br> ${diffSecondsFinal} detik;
+            } else if (diffSeconds < 0) {
                 statusClass = 'status-green';
-                statusText = 'Sedang Diproses';
-            } else if (startTime !== '' && endTime !== '') {
-                if (diffSeconds > 0) {
-                    statusClass = 'status-red';
-                    statusText = `WAKTU LEBIH <br> ${diffHours} jam, ${diffMinutes} menit, <br> ${diffSecondsFinal} detik`;
-                } else if (diffSeconds < 0) {
-                    statusClass = 'status-green';
-                    statusText = `WAKTU KURANG <br> ${diffHours} jam, ${diffMinutes} menit, <br> ${diffSecondsFinal} detik`;
-                } else {
-                    statusClass = 'status-neutral';
-                    statusText = 'WAKTU CUKUP';
-                }
+                statusText = WAKTU KURANG <br> ${diffHours} jam, ${diffMinutes} menit,<br> ${diffSecondsFinal} detik;
             } else {
-                statusClass = 'status-red';
-                statusText = 'Status Tidak Diketahui';
+                statusClass = 'status-neutral';
+                statusText = 'WAKTU CUKUP';
             }
 
-            $(`td[data-id="${id}"][data-field="status"]`).removeClass('status-red status-green status-neutral')
-                .addClass(statusClass).html(statusText);
+            $(td[data-id="${id}"][data-field="status"]).removeClass('status-red status-green status-neutral').addClass(statusClass).html(statusText);
 
             $.ajax({
                 url: 'update-status.php',
                 type: 'POST',
-                data: { id: id, status: statusText },
+                data: { id: id, STATUS: statusText },
                 success: function(response) {
-                    if (response.trim() !== 'Success') {
+                    if (response.trim() === 'Success') {
+                    } else {
                         alert('Failed to update status: ' + response);
                     }
                 },
@@ -643,67 +614,46 @@
             });
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-        let startButtons = document.querySelectorAll('.start-button');
-        let pauseButtons = document.querySelectorAll('.pause-button');
-        let endButtons = document.querySelectorAll('.end-button');
+        function sendDurationToServer(id, duration) {
+            console.log(Sending duration to server for ID ${id}: ${duration});
+            $.ajax({
+                url: 'update-duration.php',
+                type: 'POST',
+                data: { id: id, DURATION: duration },
+                success: function(response) {
+                    if (response.trim() === 'Success') {
+                        alert('Duration updated successfully');
+                    } else {
+                        alert('Failed to update duration: ' + response);
+                    }
+                },
+                error: function() {
+                    alert('Failed to update duration');
+                }
+            });
+        }
 
-        startButtons.forEach(button => {
-            let id = button.getAttribute('data-id');
-            loadFromLocalStorage(id);
+        $(document).ready(function() {
+            $('.stopwatch').each(function() {
+                const id = $(this).data('id');
+                loadFromLocalStorage(id);
+            });
 
-            button.addEventListener('click', function() {
+            $(document).on('click', '.start-button', function() {
+                const id = $(this).data('id');
                 updateStartTime(id);
             });
-        });
 
-        pauseButtons.forEach(button => {
-            let id = button.getAttribute('data-id');
-            button.addEventListener('click', function() {
+            $(document).on('click', '.pause-button', function() {
+                const id = $(this).data('id');
                 pauseStopwatch(id);
             });
-        });
 
-        endButtons.forEach(button => {
-            let id = button.getAttribute('data-id');
-            button.addEventListener('click', function() {
+            $(document).on('click', '.end-button', function() {
+                const id = $(this).data('id');
                 updateEndTime(id);
             });
         });
-
-        document.querySelectorAll('input[name="END_TIME"]').forEach(function(input) {
-            input.addEventListener('change', function() {
-                var row = input.closest('tr');
-                var prioritasCell = row.querySelector('.prioritas');
-                var id = input.getAttribute('data-id');
-
-                if (input.value) {
-                    prioritasCell.textContent = '-';
-                    prioritas[id] = '-';
-                } else {
-                    var originalPrioritas = prioritas[id] || prioritasCell.getAttribute('data-original-prioritas');
-                    prioritasCell.textContent = originalPrioritas;
-                }
-
-                updatePrioritasInDatabase(id, prioritasCell.textContent);
-            });
-        });
-    });
-
-    function updatePrioritasInDatabase(id, prioritas) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', 'update-prioritas.php', true);
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                console.log('Prioritas updated successfully');
-            } else {
-                console.error('Error updating prioritas');
-            }
-        };
-        xhr.send('id=' + encodeURIComponent(id) + '&prioritas=' + encodeURIComponent(prioritas));
-    }
-</script>
-
+    </script>
 </body>
 </html>

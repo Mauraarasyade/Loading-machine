@@ -224,6 +224,9 @@ body {
 .status-green {
     color: green !important;
 }
+.status-orange {
+    color: orange !important;
+}
 .status-neutral {
     color: black;
 }
