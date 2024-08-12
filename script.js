@@ -39,39 +39,6 @@ function updateSelectColor(selectElement) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('input[name="END_TIME"]').forEach(function(input) {
-        input.addEventListener('change', function() {
-            var row = input.closest('tr');
-            var prioritasCell = row.querySelector('.prioritas');
-            var id = input.getAttribute('data-id');
-            
-            if (input.value) {
-                prioritasCell.textContent = '-';
-                updatePrioritasInDatabase(id, '-');
-            } else {
-                var originalPrioritas = prioritasCell.getAttribute('data-original-prioritas');
-                prioritasCell.textContent = originalPrioritas;
-                updatePrioritasInDatabase(id, originalPrioritas);
-            }
-        });
-    });
-});
-
-function updatePrioritasInDatabase(id, prioritas) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'update-prioritas.php', true);
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhr.onload = function() {
-        if (xhr.status === 200) {
-            console.log('Prioritas updated successfully');
-        } else {
-            console.error('Error updating prioritas');
-        }
-    };
-    xhr.send('id=' + encodeURIComponent(id) + '&prioritas=' + encodeURIComponent(prioritas));
-}
-
 function updateDate(id, date) {
     $.ajax({
         url: 'update-date.php',

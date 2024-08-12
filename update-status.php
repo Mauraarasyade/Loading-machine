@@ -3,7 +3,7 @@
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $id = intval($_POST['id']);
-        $status = trim($_POST['STATUS']);
+        $status = trim($_POST['status']);
 
         if (!empty($status)) {
             $status = mysqli_real_escape_string($db, $status);

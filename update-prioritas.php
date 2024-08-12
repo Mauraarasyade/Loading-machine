@@ -1,21 +1,24 @@
 <?php
-include_once("./koneksi.php");
+    include_once("./koneksi.php");
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $id = intval($_POST['id']);
-    $prioritas = $db->real_escape_string($_POST['prioritas']);
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $id = intval($_POST['id']);
+        $prioritas = trim($_POST['prioritas']);
 
-    if ($id && isset($prioritas)) {
-        $query = "UPDATE data SET PRIORITAS='$prioritas' WHERE id=$id";
-        $result = $db->query($query);
+        if (!empty($prioritas)) {
+            $prioritas = mysqli_real_escape_string($db, $prioritas);
 
-        if ($result) {
-            echo "Success";
+            $query = mysqli_query($db, "UPDATE data SET PRIORITAS='$prioritas' WHERE id=$id");
+
+            if ($query) {
+                echo "Success";
+            } else {
+                echo "Failed: " . mysqli_error($db);
+            }
         } else {
-            echo "Failed: " . $db->error;
+            echo "Prioritas cannot be empty.";
         }
     } else {
-        echo "Invalid data";
+        echo "Invalid request method.";
     }
-}
 ?>
