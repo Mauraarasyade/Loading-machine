@@ -24,6 +24,24 @@
                                 ELSE 3 END, PRIORITAS DESC, DATE ASC, START_TIME ASC";
     $result = mysqli_query($db, $query);
 
+    $queryNops = "SELECT DISTINCT NOP FROM wip";
+    $resultNops = mysqli_query($db, $queryNops);
+
+    if (!$resultNops) {
+        die("Query Error: " . mysqli_error($db));
+    }
+
+    $nops = [];
+    while ($row = mysqli_fetch_assoc($resultNops)) {
+        $nops[] = $row['NOP'];
+    }
+
+    $queryWip = "SELECT * FROM wip";
+    $resultWip = mysqli_query($db, $queryWip);
+
+    if (!$resultWip) {
+        die("Query Error: " . mysqli_error($db));
+    }
 ?>
 
 <!DOCTYPE html>
@@ -162,9 +180,9 @@
                         <label for="nopFilter" class="form-label">Filter NOP</label>
                         <select id="nopFilter" name="nop" class="form-control">
                             <option value="">--- All NOP ---</option>
-                            <option value="red" <?php if($nopFilter == 'red') echo 'selected'; ?>>Red</option>
-                            <option value="green" <?php if($nopFilter == 'green') echo 'selected'; ?>>Green</option>
-                            <option value="blue" <?php if($nopFilter == 'blue') echo 'selected'; ?>>Blue</option>
+                            <?php foreach ($nops as $nop) : ?>
+                                <option value="<?php echo $nop; ?>" <?php if($nopFilter == $nop) echo 'selected'; ?>><?php echo $nop; ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="submit-container">
@@ -297,7 +315,16 @@
                         <td class="material"><?php echo htmlspecialchars($data["MATERIAL"]); ?></td>
                         <td class="pos"><?php echo htmlspecialchars($data["POS"]); ?></td>
                         <td class="qty"><?php echo htmlspecialchars($data["QTY"]); ?></td>
-                        <td class="nop"><?php echo htmlspecialchars($data["NOP"]); ?></td>
+                        <td class="nop">
+                            <select id="nopFilter" name="nop" class="form-control">
+                                <option value="">Pilih NOP</option>
+                                <?php foreach ($nops as $nop): ?>
+                                    <option value="<?php echo htmlspecialchars($nop); ?>" <?php if($nopFilter == $nop) echo 'selected'; ?>>
+                                        <?php echo htmlspecialchars($nop); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
                         <td class="est" data-id="<?php echo $data['id']; ?>" data-field="est"><?php echo date('H:i:s', strtotime($data['EST'])); ?></td>
                         <td class="date">
                             <input type="date" name="DATE" class="form-control" data-id="<?php echo $data["id"]; ?>" value="<?php echo date('Y-m-d', strtotime($data['DATE'])); ?>">
@@ -341,435 +368,131 @@
     <script>feather.replace();</script>
     <script src="./style.js"></script>
     <script src="./script.js"></script>
+    <script src="./javascript.js"></script>
     <script>
-        let timers = {};
-        let startTimes = {};
-        let elapsedTime = {};
-        let isPaused = {};
-        let wasEnded = {};
+        document.addEventListener('DOMContentLoaded', function() {
+            const machineColors = document.querySelectorAll('.machineColorSelect');
+            
+            machineColors.forEach(function(selectElement) {
+                const storageKey = 'machineColorValue_' + selectElement.dataset.key;
+                const savedValue = localStorage.getItem(storageKey);
 
-        function formatTime(date) {
-            let hours = date.getHours().toString().padStart(2, '0');
-            let minutes = date.getMinutes().toString().padStart(2, '0');
-            let seconds = date.getSeconds().toString().padStart(2, '0');
-            return `${hours}:${minutes}:${seconds}`;
-        }
-
-        function saveButtonStatus(id, status) {
-            localStorage.setItem(`button_status_${id}`, status);
-        }
-
-        function getButtonStatus(id) {
-            return localStorage.getItem(`button_status_${id}`) || 'inactive';
-        }
-
-        function saveToLocalStorage(id, startTime, elapsedTime, isPaused) {
-            const data = {
-                startTime: startTime,
-                elapsedTime: elapsedTime,
-                isPaused: isPaused
-            };
-            console.log(`Saving to Local Storage for ID ${id}`, data);
-            localStorage.setItem(`stopwatch_${id}`, JSON.stringify(data));
-        }
-
-        function loadFromLocalStorage(id) {
-            const data = JSON.parse(localStorage.getItem(`stopwatch_${id}`));
-            if (data) {
-                startTimes[id] = data.startTime ? new Date(data.startTime) : new Date('1970-01-01T00:00:00Z');
-                elapsedTime[id] = data.elapsedTime || 0;
-                isPaused[id] = data.isPaused || false;
-                console.log(`Loaded from Local Storage for ID ${id}`, data);
-
-                if (!isPaused[id] && getButtonStatus(id) !== 'end') {
-                    startStopwatch(id, true);
-                } else if (isPaused[id]) {
-                    updateStopwatchDisplay(id);
+                if (savedValue) {
+                    selectElement.value = savedValue;
+                    updateSelectColor(selectElement);
                 }
+
+                selectElement.addEventListener('change', function() {
+                    console.log('Changed select:', selectElement.dataset.key, selectElement.value);
+                    updateSelectColor(selectElement);
+                    localStorage.setItem(storageKey, selectElement.value);
+                });
+            });
+        });
+
+        function updateSelectColor(selectElement) {
+            const value = selectElement.value;
+            if (value.startsWith('GMC')) {
+                selectElement.style.backgroundColor = 'blue';
+                selectElement.style.color = 'white';
+                selectElement.style.fontWeight = 'bold';
+            } else if (value.startsWith('GEC')) {
+                selectElement.style.backgroundColor = 'green';
+                selectElement.style.color = 'white';
+                selectElement.style.fontWeight = 'bold';
+            } else if (value.startsWith('GDC')) {
+                selectElement.style.backgroundColor = 'brown';
+                selectElement.style.color = 'white';
+                selectElement.style.fontWeight = 'bold';
             } else {
-                startTimes[id] = new Date('1970-01-01T00:00:00Z');
-                elapsedTime[id] = 0;
-                isPaused[id] = false;
+                selectElement.style.backgroundColor = 'white';
+                selectElement.style.color = 'black';
             }
-
-            updateButtonStyles(id, getButtonStatus(id));
         }
 
-        function startStopwatch(id, fromLoad = false) {
-            if (timers[id]) {
-                clearInterval(timers[id]);
+        function checkAvailability(selectedElement) {
+            const selectedValue = selectedElement.value;
+            let isValueUsed = false;
+
+            document.querySelectorAll('.machineColorSelect').forEach(function(select) {
+                if (select !== selectedElement && select.value === selectedValue) {
+                    isValueUsed = true;
+                }
+            });
+
+            if (isValueUsed) {
+                alert("Sedang digunakan");
+                selectedElement.value = '';
+                updateSelectColor(selectedElement);
+                return;
             }
 
-            console.log(`Starting stopwatch with ID ${id}`);
-        console.log(`From Load: ${fromLoad}`);
-        console.log(`Is Paused: ${isPaused[id]}`);
-        console.log(`Was Ended: ${wasEnded[id]}`);
-
-            if (!fromLoad) {
-                if (isPaused[id]) {
-                    startTimes[id] = new Date(new Date().getTime() - elapsedTime[id]);
-                    alert("PROGRAM BERJALAN KEMBALI");
-                } else {
-                    if (wasEnded[id]) {
-                        startTimes[id] = new Date();
-                        elapsedTime[id] = 0;
-                        alert("WAKTU DIMULAI");
-                    } else {
-                        startTimes[id] = new Date();
-                        elapsedTime[id] = 0;
-                    }
-                    wasEnded[id] = false;
-                }
-                isPaused[id] = false;
-            } else {
-                if (isPaused[id]) {
-                    startTimes[id] = new Date(new Date().getTime() - elapsedTime[id]);
-                    alert("PROGRAM BERJALAN KEMBALI");
-                } else {
-                    console.log("Stopwatch is already running.");
-                }
-            }
-
-            document.getElementById(`startTime${id}`).innerText = formatTime(startTimes[id]);
-
-            timers[id] = setInterval(function() {
-                let now = new Date();
-                elapsedTime[id] = now - startTimes[id];
-                updateStopwatchDisplay(id);
-
-                saveToLocalStorage(id, startTimes[id].toISOString(), elapsedTime[id], isPaused[id]);
-            }, 1000);
-
-            saveButtonStatus(id, 'start');
-            updateButtonStyles(id, 'start');
-        }
-
-        function updateStartTime(id) {
-            const startTime = new Date();
-            $.ajax({
-                url: 'update-start-time.php',
-                type: 'POST',
-                data: { id: id, START_TIME: formatTime(startTime) },
-                success: function(response) {
-                    if (response.trim() === 'Success') {
-                        document.getElementById(`startTime${id}`).innerText = formatTime(startTime);
-                        $(`input[name="START_TIME"][data-id="${id}"]`).val(formatTime(startTime));
-                        $(`td[data-id="${id}"][data-field="status"]`).removeClass('status-red status-green status-neutral').html('');
-                            if (getButtonStatus(id) !== 'pause') {
-                                startStopwatch(id);
-                            } else {
-                                startStopwatch(id, true);
+            document.querySelectorAll('.machineColorSelect').forEach(function(select) {
+                if (select !== selectedElement) {
+                    select.querySelectorAll('option').forEach(function(option) {
+                        if (option.value === selectedValue) {
+                            option.disabled = true;
+                        } else {
+                            if (!isOptionUsedElsewhere(option.value)) {
+                                option.disabled = false;
                             }
-                    } else {
-                        alert('Failed to update start time: ' + response);
-                    }
-                },
-                error: function() {
-                    alert('Failed to update start time');
-                }
-            });
-
-            $.ajax({
-                url: 'update-end-time.php',
-                type: 'POST',
-                data: { id: id, END_TIME: "00:00:00" },
-                success: function(response) {
-                    if (response.trim() === 'Success') {
-                        document.getElementById(`endTime${id}`).innerText = "00:00:00";
-                        $(`input[name="END_TIME"][data-id="${id}"]`).val("00:00:00");
-                        wasEnded[id] = true;
-                    } else {
-                        alert('Failed to reset end time: ' + response);
-                    }
-                },
-                error: function() {
-                    alert('Failed to reset end time');
-                }
-            });
-
-            saveButtonStatus(id, 'start');
-            updateButtonStyles(id, 'start');
-        }
-
-        function pauseStopwatch(id) {
-            if (timers[id]) {
-                clearInterval(timers[id]);
-            }
-
-            isPaused[id] = true;
-            updateStopwatchDisplay(id);
-            saveToLocalStorage(id, startTimes[id].toISOString(), elapsedTime[id], isPaused[id]);
-            saveButtonStatus(id, 'pause');
-            updateButtonStyles(id, 'pause');
-
-            console.log(`Paused stopwatch for ID ${id}`);
-            console.log(`isPaused: ${isPaused[id]}`);
-            console.log(`elapsedTime: ${elapsedTime[id]}`);
-        }
-
-        function updateEndTime(id) {
-            const endTime = new Date();
-            clearInterval(timers[id]);
-            const formattedEndTime = formatTime(endTime);
-
-            document.getElementById(`endTime${id}`).innerText = formattedEndTime;
-            $(`input[name="END_TIME"][data-id="${id}"]`).val(formattedEndTime);
-
-            const endTimeInput = document.querySelector(`input[data-id="${id}"]`);
-            const endTimeSpan = document.querySelector(`#endTime${id}`);
-            const prioritasCell = document.querySelector(`#prioritas-${id}`);
-            const duration = document.getElementById(`duration${id}`).innerText;
-
-            $.ajax({
-                url: 'update-end-time.php',
-                type: 'POST',
-                data: { id: id, END_TIME: formattedEndTime, DURATION: duration },
-                success: function(response) {
-                    if (response.trim() === 'Success') {
-                        sendDurationToServer(id, duration);
-                        updateStatus(id, duration);
-                        saveButtonStatus(id, 'end');
-                        updateButtonStyles(id, 'end');
-
-                        if (prioritasCell) {
-                            prioritasCell.textContent = '-';
-                            updatePrioritasInDatabase(id, '-');
                         }
-                        wasEnded[id] = true;
+                    });
+                }
+            });
+        }
+
+        function isOptionUsedElsewhere(value) {
+            let isUsed = false;
+            document.querySelectorAll('.machineColorSelect').forEach(function(select) {
+                if (select.value === value) {
+                    isUsed = true;
+                }
+            });
+            return isUsed;
+        }
+
+        window.addEventListener('load', function() {
+            document.querySelectorAll('.machineColorSelect').forEach(function(select) {
+                updateSelectColor(select);
+                const selectedValue = select.value;
+                document.querySelectorAll('.machineColorSelect').forEach(function(otherSelect) {
+                    if (otherSelect !== select) {
+                        otherSelect.querySelectorAll('option').forEach(function(option) {
+                            if (option.value === selectedValue) {
+                                option.disabled = true;
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+        function updateDate(id, date) {
+            $.ajax({
+                url: 'update-date.php',
+                type: 'POST',
+                data: { id: id, DATE: date },
+                success: function(response) {
+                    if (response === 'Success') {
+                        alert('Date updated successfully');
                     } else {
-                        alert('Failed to update end time: ' + response);
+                        alert('Failed to update date: ' + response);
                     }
                 },
                 error: function() {
-                    alert('Failed to update end time');
-                }
-            });
-        }
-
-        function updateStopwatchDisplay(id) {
-            let elapsed = new Date(elapsedTime[id]);
-            let hours = String(elapsed.getUTCHours()).padStart(2, '0');
-            let minutes = String(elapsed.getUTCMinutes()).padStart(2, '0');
-            let seconds = String(elapsed.getUTCSeconds()).padStart(2, '0');
-            document.getElementById(`duration${id}`).innerText = `${hours}:${minutes}:${seconds}`;
-        }
-
-        function updateButtonStyles(id, status) {
-            let startButton = document.getElementById(`startButton${id}`);
-            let pauseButton = document.getElementById(`pauseButton${id}`);
-            let endButton = document.getElementById(`endButton${id}`);
-
-            startButton.className = 'btn-action start-button';
-            pauseButton.className = 'btn-action pause-button';
-            endButton.className = 'btn-action end-button';
-
-            switch (status) {
-                case 'start':
-                    startButton.classList.add('start-active');
-                    pauseButton.classList.add('inactive');
-                    endButton.classList.add('inactive');
-                    break;
-                case 'pause':
-                    startButton.classList.add('inactive');
-                    pauseButton.classList.add('pause-active');
-                    endButton.classList.add('inactive');
-                    break;
-                case 'end':
-                    startButton.classList.add('inactive');
-                    pauseButton.classList.add('inactive');
-                    endButton.classList.add('end-active');
-                    break;
-                default:
-                    startButton.classList.add('btn-action.start-button');
-                    pauseButton.classList.add('btn-action.pause-button');
-                    endButton.classList.add('btn-action.end-button');
-                    break;
-            }
-        }
-
-        function diffTime(startTime, endTime) {
-            let start = new Date(`1970-01-01T${startTime}Z`);
-            let end = new Date(`1970-01-01T${endTime}Z`);
-            let diffMs = end - start;
-            let hours = Math.floor(diffMs / 3600000);
-            let minutes = Math.floor((diffMs % 3600000) / 60000);
-            let seconds = Math.floor((diffMs % 60000) / 1000);
-
-            hours = hours < 0 ? 24 + hours : hours;
-            hours = String(hours).padStart(2, '0');
-            minutes = String(minutes).padStart(2, '0');
-            seconds = String(seconds).padStart(2, '0');
-
-            return `${hours}:${minutes}:${seconds}`;
-        }
-
-        function sendDurationToServer(id, duration) {
-            $.ajax({
-                url: 'update-duration.php',
-                type: 'POST',
-                data: { id: id, DURATION: duration },
-                success: function(response) {
-                    if (response.trim() !== 'Success') {
-                        alert('Failed to update duration: ' + response);
-                    }
-                },
-                error: function() {
-                    alert('Failed to update duration');
-                }
-            });
-        }
-
-        function updateStatus(id, duration, startTime, endTime) {
-            const est = $(`td[data-id="${id}"][data-field="est"]`).text();
-
-            const durationParts = duration.split(':');
-            const durationHours = parseInt(durationParts[0], 10) || 0;
-            const durationMinutes = parseInt(durationParts[1], 10) || 0;
-            const durationSeconds = parseInt(durationParts[2], 10) || 0;
-
-            const estParts = est.split(':');
-            const estHours = parseInt(estParts[0], 10) || 0;
-            const estMinutes = parseInt(estParts[1], 10) || 0;
-            const estSeconds = parseInt(estParts[2], 10) || 0;
-
-            const durationTotalSeconds = (durationHours * 3600) + (durationMinutes * 60) + durationSeconds;
-            const estTotalSeconds = (estHours * 3600) + (estMinutes * 60) + estSeconds;
-
-            const diffSeconds = durationTotalSeconds - estTotalSeconds;
-            const absDiffSeconds = Math.abs(diffSeconds);
-            const diffHours = Math.floor(absDiffSeconds / 3600);
-            const diffMinutes = Math.floor((absDiffSeconds % 3600) / 60);
-            const diffSecondsFinal = absDiffSeconds % 60;
-
-            let statusText = '';
-            let statusClass = '';
-
-            if ((startTime === '' || startTime === '00:00:00') && (endTime === '' || endTime === '00:00:00')) {
-                statusClass = 'status-red';
-                statusText = 'Belum Diproses';
-            } else if (startTime !== '' && (endTime === '' || endTime === '00:00:00')) {
-                statusClass = 'status-green';
-                statusText = 'Sedang Diproses';
-            } else if (startTime !== '' && endTime !== '') {
-                if (diffSeconds > 0) {
-                    statusClass = 'status-red';
-                    statusText = `WAKTU LEBIH <br> ${diffHours} jam, ${diffMinutes} menit, <br> ${diffSecondsFinal} detik`;
-                } else if (diffSeconds < 0) {
-                    statusClass = 'status-green';
-                    statusText = `WAKTU KURANG <br> ${diffHours} jam, ${diffMinutes} menit, <br> ${diffSecondsFinal} detik`;
-                } else {
-                    statusClass = 'status-neutral';
-                    statusText = 'WAKTU CUKUP';
-                }
-            } else {
-                statusClass = 'status-red';
-                statusText = 'Status Tidak Diketahui';
-            }
-
-            $(`td[data-id="${id}"][data-field="status"]`).removeClass('status-red status-green status-neutral')
-                .addClass(statusClass).html(statusText);
-
-            $.ajax({
-                url: 'update-status.php',
-                type: 'POST',
-                data: { id: id, status: statusText },
-                success: function(response) {
-                    if (response.trim() !== 'Success') {
-                        alert('Failed to update status: ' + response);
-                    }
-                },
-                error: function() {
-                    alert('Failed to update status');
+                    alert('Failed to update date');
                 }
             });
         }
 
         $(document).ready(function() {
-            $('tr').each(function() {
+            $('input[name="DATE"]').on('change', function() {
                 const id = $(this).data('id');
-                loadFromLocalStorage(id);
-
-                $(`#startButton${id}`).click(function() {
-                    startStopwatch(id);
-                });
-
-                $(`#pauseButton${id}`).click(function() {
-                    pauseStopwatch(id);
-                });
-
-                $(`#endButton${id}`).click(function() {
-                    updateEndTime(id);
-                });
+                const date = $(this).val();
+                updateDate(id, date);
             });
         });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            let startButtons = document.querySelectorAll('.start-button');
-            let pauseButtons = document.querySelectorAll('.pause-button');
-            let endButtons = document.querySelectorAll('.end-button');
-
-            startButtons.forEach(button => {
-                let id = button.getAttribute('data-id');
-                loadFromLocalStorage(id);
-
-                button.addEventListener('click', function() {
-                    updateStartTime(id);
-                });
-            });
-
-            pauseButtons.forEach(button => {
-                let id = button.getAttribute('data-id');
-                button.addEventListener('click', function() {
-                    pauseStopwatch(id);
-                });
-            });
-
-            endButtons.forEach(button => {
-                let id = button.getAttribute('data-id');
-                button.addEventListener('click', function() {
-                    updateEndTime(id);
-                });
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('input[name="END_TIME"]').forEach(function(input) {
-                input.addEventListener('change', function() {
-                    console.log('END_TIME changed');
-                    var row = input.closest('tr');
-                    var prioritasCell = row.querySelector('.prioritas');
-                    var id = input.getAttribute('data-id');
-
-                    console.log('Prioritas Cell:', prioritasCell);
-                    console.log('ID:', id);
-
-                    if (input.value) {
-                        prioritasCell.textContent = '-';
-                        console.log('Prioritas diubah menjadi "-"');
-                        updatePrioritasInDatabase(id, '-');
-                    } else {
-                        var originalPrioritas = prioritasCell.getAttribute('data-original-prioritas');
-                        prioritasCell.textContent = originalPrioritas;
-                        console.log('Prioritas dikembalikan ke:', originalPrioritas);
-                        updatePrioritasInDatabase(id, originalPrioritas);
-                    }
-                });
-            });
-        });
-
-        function updatePrioritasInDatabase(id, prioritas) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', 'update-prioritas.php', true);
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    console.log('Prioritas updated successfully');
-                } else {
-                    console.error('Error updating prioritas');
-                }
-            };
-            xhr.send('id=' + encodeURIComponent(id) + '&prioritas=' + encodeURIComponent(prioritas));
-        }
     </script>
 </body>
 </html>

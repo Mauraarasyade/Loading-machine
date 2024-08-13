@@ -15,21 +15,21 @@
         $REMARKS = mysqli_real_escape_string($db, $_POST["REMARKS"]);
         
         $query = mysqli_query($db, "INSERT INTO wip (NO, DESCRIPTION, NOP, QTY, KET, PIC, CUST, START, DEL_PLAN, SCHEDULE_PERCEPATAN, REMARKS)
-VALUES ('$NO', '$DESCRIPTION', '$NOP', '$QTY', '$KET', '$PIC', '$CUST', '$START', '$DEL_PLAN', '$SCHEDULE_PERCEPATAN', '$REMARKS')");
+                                VALUES ('$NO', '$DESCRIPTION', '$NOP', '$QTY', '$KET', '$PIC', '$CUST', '$START', '$DEL_PLAN', '$SCHEDULE_PERCEPATAN', '$REMARKS')");
 
-if ($query) {
-    echo "
-    <script>
-        alert('Data wip Berhasil Disimpan');
-        window.location.href='wip.php';
-    </script>";
-} else {
-    echo "
-    <script>
-        alert('Data wip Gagal Disimpan: " . mysqli_error($db) . "');
-        window.location.href='wip.php';
-    </script>";
-}
+        if ($query) {
+            echo "
+            <script>
+                alert('Data wip Berhasil Disimpan');
+                window.location.href='wip.php';
+            </script>";
+        } else {
+            echo "
+            <script>
+                alert('Data wip Gagal Disimpan: " . mysqli_error($db) . "');
+                window.location.href='wip.php';
+            </script>";
+        }
     }
 ?>
 
@@ -48,11 +48,11 @@ if ($query) {
         }
     </style>
 </head>
-<d>
-<div class="container mt-5">
-    <div class="form-container">
-        <h1 class="my-4 text-center">FORM TAMBAH WIP</h1>
-        <form action="" method="POST">
+<body>
+    <div class="container mt-5">
+        <div class="form-container">
+            <h1 class="my-4 text-center">FORM TAMBAH WIP</h1>
+            <form action="" method="POST">
                 <div class="mb-3">
                     <label for="NO" class="form-label">NO</label>
                     <input required type="text" name="NO" class="form-control" id="NO">
@@ -97,11 +97,11 @@ if ($query) {
                     <label for="REMARKS" class="form-label">REMARKS</label>
                     <input required type="text" name="REMARKS" class="form-control" id="REMARKS">
                 </div>
-            </div>
                 <button type="submit" name="submit" class="btn btn-danger my-5">Submit</button>
                 <a class="btn btn-primary" href="./wip.php">Kembali ke halaman wip</a>
-        </form>
+            </form>
+        </div>
     </div>
-    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

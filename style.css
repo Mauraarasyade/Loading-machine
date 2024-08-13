@@ -191,11 +191,11 @@ body {
     text-align: center;
 }
 
-.pos, .qty, .nop, .remark {
+.pos, .qty, .remark {
     min-width: 100px;
 }
 
-.process, .machine, .material {
+.process, .machine, .nop, .material {
     min-width: 130px;
 }
 

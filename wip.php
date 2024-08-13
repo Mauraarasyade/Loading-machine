@@ -1,6 +1,7 @@
 <?php
     include_once("./koneksi.php");
 
+    // Query untuk mengambil semua data dari tabel wip
     $query = "SELECT * FROM wip";
     $result = mysqli_query($db, $query);
 
@@ -37,6 +38,9 @@
         <div class="navbar-nav">
             <div class="menu">
                 <a href="./index.php">Home<i data-feather="home" class="home-item"></i></a>
+            </div>
+            <div class="add">
+                <a href="./tambah-wip.php">Add Data<i data-feather="plus-square" class="add-item"></i></a>
             </div>
         </div>
         <div class="navbar-extra">
@@ -88,9 +92,10 @@
                 ?>
                 
             </tbody>
-        </table><a class="btn btn-danger" href="./tambah-wip.php">ADD WIP</a>
+        </table>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>feather.replace();</script>
+    <script src="./style.js"></script>
 </body>
 </html>
