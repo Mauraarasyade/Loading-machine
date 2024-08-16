@@ -7,7 +7,6 @@
 
         if (!empty($duration)) {
             $duration = mysqli_real_escape_string($db, $duration);
-
             $query = mysqli_query($db, "UPDATE data SET DURATION='$duration' WHERE id=$id");
 
             if ($query) {

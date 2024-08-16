@@ -7,7 +7,6 @@
 
         if (!empty($prioritas)) {
             $prioritas = mysqli_real_escape_string($db, $prioritas);
-
             $query = mysqli_query($db, "UPDATE data SET PRIORITAS='$prioritas' WHERE id=$id");
 
             if ($query) {

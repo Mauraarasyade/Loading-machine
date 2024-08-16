@@ -11,6 +11,18 @@ function formatTime(date) {
     return `${hours}:${minutes}:${seconds}`;
 }
 
+function formatDuration(seconds) {
+    let hours = Math.floor(seconds / 3600);
+    let minutes = Math.floor((seconds % 3600) / 60);
+    let secs = seconds % 60;
+
+    hours = hours.toString().padStart(2, '0');
+    minutes = minutes.toString().padStart(2, '0');
+    secs = secs.toString().padStart(2, '0');
+
+    return `${hours}:${minutes}:${secs}`;
+}
+
 function saveButtonStatus(id, status) {
     localStorage.setItem(`button_status_${id}`, status);
 }
@@ -72,8 +84,6 @@ function startStopwatch(id, fromLoad = false) {
             console.log("Stopwatch is already running.");
         }
     }
-
-    document.getElementById(`startTime${id}`).innerText = formatTime(startTimes[id]);
 
     timers[id] = setInterval(function() {
         let now = new Date();
@@ -190,11 +200,8 @@ function updateEndTime(id) {
 }
 
 function updateStopwatchDisplay(id) {
-    let elapsed = new Date(elapsedTime[id]);
-    let hours = String(elapsed.getUTCHours()).padStart(2, '0');
-    let minutes = String(elapsed.getUTCMinutes()).padStart(2, '0');
-    let seconds = String(elapsed.getUTCSeconds()).padStart(2, '0');
-    document.getElementById(`duration${id}`).innerText = `${hours}:${minutes}:${seconds}`;
+    let elapsedSeconds = Math.floor(elapsedTime[id] / 1000);
+    document.getElementById(`duration${id}`).innerText = formatDuration(elapsedSeconds);
 }
 
 function updateButtonStyles(id, status) {

@@ -19,7 +19,6 @@ html {
 body {
     font-family: 'Poppins', sans-serif;
     background-color: var(--bg);
-    color: #ffffff;
     min-width: 1000px;
 }
 
@@ -27,8 +26,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.4rem 7%;
-    background-color: #011c40;
+    padding: 1rem 7%;
+    background-color:  #011c40;
     border-bottom: 1px solid #513c28;
     position: fixed;
     top: 0;
@@ -38,13 +37,11 @@ body {
 }
 
 .navbar .navbar-logo {
-    font-size: 2rem;
     font-weight: 700;
     color: #ffffff;
-    font-style: italic;
 }
 
-.navbar .navbar-logo span {
+.navbar .navbar-logo:hover {
     color: var(--primary);
 }
 
@@ -89,7 +86,7 @@ body {
     padding: 1rem;
     margin-bottom: 1rem;
     border: 1px solid #011c40;
-    border-radius: 4px;/
+    border-radius: 4px;
 }
 
 .navbar .filter-form label {
@@ -174,17 +171,49 @@ body {
     color: #011c40;
 }
 
-.home-item, .archive-item, .excel-item, .word-item, .add-item {
+.container .actual button {
+    background-color: white;
+    color: #011c40;
+    border: 2px solid #011c40;
+    padding: 0;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 20%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 3px;
+}
+
+.container .actual button:hover {
+    background-color: #011c40;
+    color: var(--bg);
+    border: 2px solid #011c40;
+}
+
+.actual button.active {
+    background-color: #011c40;
+    color: var(--bg);
+    border: 2px solid #011c40;
+}
+
+.home-item, .archive-item, .excel-item, .word-item {
     position: absolute;
     right: 0;
 }
 
-.home-item:hover, .archive-item:hover, .excel-item:hover, .word-item:hover, .add-item:hover {
+.home-item:hover, .archive-item:hover, .excel-item:hover, .word-item:hover {
     color: #011c40;
 }
 
+.table {
+    margin-top: 50px;
+}
+
 .table th {
-    padding: 8rem 0% 1.5rem;
+    padding: 2rem 0% 1rem;
 }
 
 .table th, .table td {
@@ -199,11 +228,11 @@ body {
     min-width: 130px;
 }
 
-.est, .duration, .status, .prioritas, .date {
+.est, .duration, .status, .prioritas, .date, .start, .end {
     min-width: 150px;
 }
 
-.action, .start, .end {
+.action,.actual {
     min-width: 200px;
 }
 
@@ -215,18 +244,23 @@ body {
     max-width: 220px;
     text-align: center;
 }
+
 .btn {
     min-width: 70px;
 }
+
 .status-red {
     color: red !important;
 }
+
 .status-green {
     color: green !important;
 }
+
 .status-orange {
     color: orange !important;
 }
+
 .status-neutral {
     color: black;
 }
@@ -235,10 +269,12 @@ body {
     background-color: white;
     color: blue;
 }
+
 .gec-option {
     background-color: white;
     color: green;
 }
+
 .gdc-option {
     background-color: white;
     color: brown;

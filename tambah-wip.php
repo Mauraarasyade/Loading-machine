@@ -19,16 +19,16 @@
 
         if ($query) {
             echo "
-            <script>
-                alert('Data wip Berhasil Disimpan');
-                window.location.href='wip.php';
-            </script>";
+                <script>
+                    alert('Data wip Berhasil Disimpan');
+                    window.location.href='wip.php';
+                </script>";
         } else {
             echo "
-            <script>
-                alert('Data wip Gagal Disimpan: " . mysqli_error($db) . "');
-                window.location.href='wip.php';
-            </script>";
+                <script>
+                    alert('Data wip Gagal Disimpan: " . mysqli_error($db) . "');
+                    window.location.href='wip.php';
+                </script>";
         }
     }
 ?>

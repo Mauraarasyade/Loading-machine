@@ -1,12 +1,11 @@
 <?php
     include_once("./koneksi.php");
 
-    $processFilter = isset($_GET['process']) ? $_GET['process'] : '';
-    $machineFilter = isset($_GET['machine']) ? $_GET['machine'] : '';
-    $nopFilter = isset($_GET['nop']) ? $_GET['nop'] : '';
+    $processFilter = isset($_GET['process']) ? mysqli_real_escape_string($db, $_GET['process']) : '';
+    $machineFilter = isset($_GET['machine']) ? mysqli_real_escape_string($db, $_GET['machine']) : '';
+    $nopFilter = isset($_GET['nop']) ? mysqli_real_escape_string($db, $_GET['nop']) : '';
 
-    $query = "SELECT * FROM data WHERE START_TIME IS NOT NULL AND START_TIME != ''";
-    $query .= " AND (END_TIME IS NULL OR END_TIME = '')";
+    $query = "SELECT * FROM data WHERE START_TIME != '00:00:00' AND END_TIME = '00:00:00'";
 
     if ($processFilter) {
         $query .= " AND PROCESS = '$processFilter'";
@@ -24,6 +23,25 @@
     if (!$result) {
         die("Query failed: " . mysqli_error($db));
     }
+    
+    $queryNops = "SELECT DISTINCT NOP FROM wip";
+    $resultNops = mysqli_query($db, $queryNops);
+
+    if (!$resultNops) {
+        die("Query Error: " . mysqli_error($db));
+    }
+
+    $nops = [];
+    while ($row = mysqli_fetch_assoc($resultNops)) {
+        $nops[] = $row['NOP'];
+    }
+
+    $queryWip = "SELECT * FROM wip";
+    $resultWip = mysqli_query($db, $queryWip);
+
+    if (!$resultWip) {
+        die("Query Error: " . mysqli_error($db));
+    }
 ?>
 
 <!DOCTYPE html>
@@ -31,11 +49,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HALAMAN PROGRES</title>
+    <title>HALAMAN DATA PROCESSING</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./index.css">
 </head>
 <body>
     <nav class="navbar">
@@ -48,19 +66,19 @@
                 <a href="./data.php">Data<i data-feather="archive" class="archive-item"></i></a>
             </div>
             <div class="add">
-                <a href="./tambah-data.php">Add Data<i data-feather="plus-square" class="add-item"></i></a>
+                <a href="./tambah-data.php">Add Data<i data-feather="plus-square" class="home-item"></i></a>
             </div>
-            <div class="empty">
-                <a href="./kosong-data.php">Empty Data Time<i data-feather="file-minus" class="add-item"></i></a>
+            <div class="process">
+                <a href="./progres.php">Process<i data-feather="clock" class="home-item"></i></a>
             </div>
             <div class="arsip">
                 <a href="./arsip.php">Archive<i data-feather="archive" class="archive-item"></i></a>
             </div>
             <div class="excel">
-                <a href="excel-progres.php?<?php echo http_build_query($_GET); ?>" target="_blank">Download Excel<i data-feather="table" class="excel-item"></i></a>
+                <a href="excel-kosong.php?<?php echo http_build_query($_GET); ?>" target="_blank">Download Excel<i data-feather="table" class="excel-item"></i></a>
             </div>
             <div class="word">
-                <a href="pdf-progres.php?<?php echo http_build_query($_GET); ?>" target="_blank">Download Word<i data-feather="file-text" class="word-item"></i></a>
+                <a href="pdf-kosong.php?<?php echo http_build_query($_GET); ?>" target="_blank">Download Word<i data-feather="file-text" class="word-item"></i></a>
             </div>
         </div>
         <div class="navbar-extra">
@@ -121,15 +139,14 @@
                         <label for="nopFilter" class="form-label">Filter NOP</label>
                         <select id="nopFilter" name="nop" class="form-control">
                             <option value="">--- All NOP ---</option>
-                            <option value="red" <?php if($nopFilter == 'red') echo 'selected'; ?>>Red</option>
-                            <option value="green" <?php if($nopFilter == 'green') echo 'selected'; ?>>Green</option>
-                            <option value="blue" <?php if($nopFilter == 'blue') echo 'selected'; ?>>Blue</option>
+                            <?php foreach ($nops as $nop) : ?>
+                                <option value="<?php echo $nop; ?>" <?php if($nopFilter == $nop) echo 'selected'; ?>><?php echo $nop; ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="submit-container">
                         <button type="submit" class="btn btn-primary mt-3">Submit</button>
                     </div>
-                    
                 </form>
             </label>
         </div>
@@ -143,6 +160,7 @@
                     <th scope="col" class="part">PART NAME</th>
                     <th scope="col" class="material">MATERIAL</th>
                     <th scope="col" class="pos">POS</th>
+                    <th scope="col" class="actual">ACTUAL POS</th>
                     <th scope="col" class="qty">QTY</th>
                     <th scope="col" class="nop">NOP</th>
                     <th scope="col" class="est">EST</th>
@@ -156,70 +174,96 @@
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($result as $data) {
-                    $durationParts = explode(' ', $data["DURATION"]);
-                    if (count($durationParts) >= 4) {
-                        $durationHours = intval($durationParts[0]);
-                        $durationMinutes = intval($durationParts[2]);
-                        $durationMinutesTotal = ($durationHours * 60) + $durationMinutes;
-                    } else {
-                        $durationMinutesTotal = 0;
-                    }
+                <?php
+                    foreach ($result as $data) {
+                        $durationParts = explode(':', $data["DURATION"]);
+                        $durationHours = !empty($durationParts[0]) ? intval($durationParts[0]) : 0;
+                        $durationMinutes = !empty($durationParts[1]) ? intval($durationParts[1]) : 0;
+                        $durationSeconds = !empty($durationParts[2]) ? intval($durationParts[2]) : 0;
 
-                    $estParts = explode(' ', $data["EST"]);
-                    if (count($estParts) >= 4) {
-                        $estHours = intval($estParts[0]);
-                        $estMinutes = intval($estParts[2]);
-                        $estMinutesTotal = ($estHours * 60) + $estMinutes;
-                    } else {
-                        $estMinutesTotal = 0;
-                    }
+                        $estParts = explode(':', $data["EST"]);
+                        $estHours = !empty($estParts[0]) ? intval($estParts[0]) : 0;
+                        $estMinutes = !empty($estParts[1]) ? intval($estParts[1]) : 0;
+                        $estSeconds = !empty($estParts[2]) ? intval($estParts[2]) : 0;
 
-                    $diffMinutes = $durationMinutesTotal - $estMinutesTotal;
-                    $absDiffMinutes = abs($diffMinutes);
+                        $durationTotalSeconds = ($durationHours * 3600) + ($durationMinutes * 60) + $durationSeconds;
+                        $estTotalSeconds = ($estHours * 3600) + ($estMinutes * 60) + $estSeconds;
 
-                    $diffHours = floor($absDiffMinutes / 60);
-                    $diffMinutes = $absDiffMinutes % 60;
+                        $diffSeconds = $durationTotalSeconds - $estTotalSeconds;
+                        $absDiffSeconds = abs($diffSeconds);
+                        $diffHours = floor($absDiffSeconds / 3600);
+                        $diffMinutes = floor(($absDiffSeconds % 3600) / 60);
+                        $diffSecondsFinal = $absDiffSeconds % 60;
 
-                    $statusClass = 'status-green';
-                    $statusText = "Sedang Diproses";
-                ?>
-                <tr>
-                    <td class="process"><?php echo htmlspecialchars($data["PROCESS"]); ?></td>
-                    <td class="machine"><?php echo htmlspecialchars($data["MACHINE"]); ?></td>
-                    <td class="part"><?php echo htmlspecialchars($data["PART_NAME"]); ?></td>
-                    <td class="material"><?php echo htmlspecialchars($data["MATERIAL"]); ?></td>
-                    <td class="pos"><?php echo htmlspecialchars($data["POS"]); ?></td>
-                    <td class="qty"><?php echo htmlspecialchars($data["QTY"]); ?></td>
-                    <td class="nop"><?php echo htmlspecialchars($data["NOP"]); ?></td>
-                    <td class="est" data-field="est"><?php echo htmlspecialchars($data["EST"]); ?></td>
-                    <td class="date">
-                        <input type="date" name="DATE" class="form-control" data-id="<?php echo $data["id"]; ?>" value="<?php echo date('Y-m-d', strtotime($data['DATE'])); ?>">
-                    </td>
-                    <td class="start">
-                        <input type="datetime-local" name="START_TIME" class="form-control" data-id="<?php echo $data["id"]; ?>" value="<?php echo date('Y-m-d\TH:i', strtotime($data['START_TIME'])); ?>">
-                    </td>
-                    <td class="end">
-                        <input type="datetime-local" name="END_TIME" class="form-control" data-id="<?php echo $data["id"]; ?>" value="<?php echo date('Y-m-d\TH:i', strtotime($data['END_TIME'])); ?>">
-                    </td>
-                    <td class="duration" data-id="<?php echo $data['id']; ?>" data-field="duration">
-                        <?php echo htmlspecialchars($data["DURATION"]); ?>
-                    </td>
-                    <td data-id="<?php echo $data['id']; ?>" data-field="status" class="<?php echo $statusClass; ?>">
-                        <?php echo $statusText; ?>
-                    </td>
-                    <td class="remark"><?php echo htmlspecialchars($data["REMARK"]); ?></td>
-                    <td class="prioritas" style="color: red; font-weight: bold;"><?php echo htmlspecialchars($data["PRIORITAS"]); ?></td>
-                </tr>
-            <?php } ?>
+                        if ((empty($data["START_TIME"]) || $data["START_TIME"] === '00:00:00') && (empty($data["END_TIME"]) || $data["END_TIME"] === '00:00:00')) {
+                            $statusClass = 'status-red';
+                            $statusText = "Belum Diproses";
+                        } elseif (!empty($data["START_TIME"]) && (empty($data["END_TIME"]) || $data["END_TIME"] === '00:00:00')) {
+                            $statusClass = 'status-green';
+                            $statusText = "Sedang Diproses";
+                        } elseif (!empty($data["START_TIME"]) && !empty($data["END_TIME"])) {
+                            if ($diffSeconds > 0) {
+                                $statusClass = 'status-red';
+                                $statusText = "WAKTU LEBIH <br> $diffHours jam, $diffMinutes menit,<br> $diffSecondsFinal detik";
+                            } elseif ($diffSeconds < 0) {
+                                $statusClass = 'status-green';
+                                $statusText = "WAKTU KURANG <br> $diffHours jam, $diffMinutes menit,<br> $diffSecondsFinal detik";
+                            } else {
+                                $statusClass = 'status-neutral';
+                                $statusText = "WAKTU CUKUP";
+                            }
+                        } else {
+                            $statusClass = 'status-red';
+                            $statusText = "Status Tidak Diketahui";
+                        }
+                    ?>
+                    <tr>
+                        <td class="process"><?php echo htmlspecialchars($data["PROCESS"]); ?></td>
+                        <td class="machine"><?php echo htmlspecialchars($data["MACHINE"]); ?></td>
+                        <td class="part"><?php echo htmlspecialchars($data["PART_NAME"]); ?></td>
+                        <td class="material"><?php echo htmlspecialchars($data["MATERIAL"]); ?></td>
+                        <td class="pos"><?php echo htmlspecialchars($data["POS"]); ?></td>
+                        <td class="actual"><?php echo htmlspecialchars($data["ACTUAL_POS"]); ?></td>
+                        <td class="qty"><?php echo htmlspecialchars($data["QTY"]); ?></td>
+                        <td class="nop"><?php echo htmlspecialchars($data["NOP"]); ?></td>
+                        <td class="est" data-field="est"><?php echo htmlspecialchars($data["EST"]); ?></td>
+                        <td class="date">
+                            <input type="date" name="DATE" class="form-control" data-id="<?php echo $data["id"]; ?>" value="<?php echo date('Y-m-d', strtotime($data['DATE'])); ?>">
+                        </td>
+                        <td class="start-time">
+                            <input type="hidden" name="START_TIME" class="form-control" data-id="<?php echo $data['id']; ?>" value="<?php echo date('H:i:s', strtotime($data['START_TIME'])); ?>">
+                            <button id="startButton<?php echo $data['id']; ?>" class="btn-action start-button" type="button" data-id="<?php echo $data['id']; ?>" onclick="updateStartTime(<?php echo $data['id']; ?>)">
+                                <i data-feather="play-circle"></i>
+                            </button>
+                            <span id="startTime<?php echo $data['id']; ?>"><?php echo date('H:i:s', strtotime($data['START_TIME'])); ?></span>
+                            <button id="pauseButton<?php echo $data['id']; ?>" class="btn-action pause-button" type="button" data-id="<?php echo $data['id']; ?>" onclick="pauseStopwatch(<?php echo $data['id']; ?>)">
+                                <i data-feather="pause-circle"></i>
+                            </button>
+                        </td>
+                        <td class="end-time">
+                            <input type="hidden" name="END_TIME" class="form-control" data-id="<?php echo $data['id']; ?>" value="<?php echo date('H:i:s', strtotime($data['END_TIME'])); ?>">
+                            <span id="endTime<?php echo $data['id']; ?>"><?php echo date('H:i:s', strtotime($data['END_TIME'])); ?></span>
+                            <button id="endButton<?php echo $data['id']; ?>" class="btn-action end-button" type="button" data-id="<?php echo $data['id']; ?>" onclick="updateEndTime(<?php echo $data['id']; ?>)">
+                                <i data-feather="minus-circle"></i>
+                            </button>
+                        </td>
+                        <td class="duration" data-id="<?php echo $data['id']; ?>" data-field="duration">
+                            <?php echo htmlspecialchars($data["DURATION"]); ?>
+                        </td>
+                        <td data-id="<?php echo $data['id']; ?>" data-field="status" class="<?php echo $statusClass; ?>">
+                            <?php echo $statusText; ?>
+                        </td>
+                        <td class="remark"><?php echo htmlspecialchars($data["REMARK"]); ?></td>
+                        <td class="prioritas" style="color: red; font-weight: bold;"><?php echo htmlspecialchars($data["PRIORITAS"]); ?></td>
+                    </tr>
+                <?php } ?>
             </tbody>
         </table>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-1MtbIsyU+mg1Xy5Z2pIvGSKXixbJz4lAxj5xVuf7B7OfRmiH2c2o6ZxfIUlHs5EO5" crossorigin="anonymous"></script>
     <script>feather.replace();</script>
-    <script src="./script.js"></script>
     <script src="./style.js"></script>
     <script src="./javascript.js"></script>
+    <script src="./index.js"></script>
 </body>
 </html>

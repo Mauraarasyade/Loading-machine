@@ -4,7 +4,6 @@
     if (isset($_POST["submit"])) {
         $PART_NAME = $_POST["PART_NAME"];
         $MATERIAL = $_POST["MATERIAL"];
-        $POS = $_POST["POS"];
         $QTY = $_POST["QTY"];
         $NOP = $_POST["NOP"];
         $EST_HOURS = str_pad(intval($_POST["EST_HOURS"]), 2, '0', STR_PAD_LEFT);
@@ -14,20 +13,21 @@
         $REMARK = $_POST["REMARK"];
         $PRIORITAS = $_POST["PRIORITAS"];
 
-        $query = mysqli_query($db, "INSERT INTO data (PART_NAME, MATERIAL, POS, QTY, NOP, EST, REMARK, PRIORITAS)
-        VALUES ('$PART_NAME', '$MATERIAL', '$POS', '$QTY', '$NOP', '$EST', '$REMARK', '$PRIORITAS')");
+        $query = mysqli_query($db, "INSERT INTO data (PART_NAME, MATERIAL, QTY, NOP, EST, REMARK, PRIORITAS)
+        VALUES ('$PART_NAME', '$MATERIAL', '$QTY', '$NOP', '$EST', '$REMARK', '$PRIORITAS')");
         
         if ($query) {
             echo "
-            <script>
-                alert('Data Berhasil Di simpan');
-                window.location.href='data.php';
-            </script>";
+                <script>
+                    alert('Data Berhasil Di simpan');
+                    window.location.href='data.php';
+                </script>";
         } else {
-            echo "<script>
-            alert('Data Gagal Di simpan');
-            window.location.href='data.php';
-            </script>" . mysqli_error($db);
+            echo "
+                <script>
+                    alert('Data Gagal Di simpan');
+                    window.location.href='data.php';
+                </script>" . mysqli_error($db);
         }
     }
 ?>
@@ -75,10 +75,6 @@
                     <input required type="text" name="MATERIAL" class="form-control" id="MATERIAL">
                 </div>
                 <div class="mb-3">
-                    <label for="POS" class="form-label">POS</label>
-                    <input required type="text" name="POS" class="form-control" id="POS">
-                </div>
-                <div class="mb-3">
                     <label for="QTY" class="form-label">QTY</label>
                     <input required type="text" name="QTY" class="form-control" id="QTY">
                 </div>
@@ -92,21 +88,21 @@
                         <div class="form-group">
                             <select required name="EST_HOURS" class="form-control" id="EST_HOURS">
                                 <?php for ($i = 0; $i < 24; $i++): ?>
-                                    <option value="<?php echo $i; ?>"><?php echo sprintf('%2d', $i); ?> jam</option>
+                                    <option value="<?php echo $i; ?>"><?php echo sprintf('%2d', $i); ?> Jam</option>
                                 <?php endfor; ?>
                             </select>
                         </div>
                         <div class="form-group">
                             <select required name="EST_MINUTES" class="form-control" id="EST_MINUTES">
                                 <?php for ($i = 0; $i < 60; $i++): ?>
-                                    <option value="<?php echo $i; ?>"><?php echo sprintf('%2d', $i); ?> menit</option>
+                                    <option value="<?php echo $i; ?>"><?php echo sprintf('%2d', $i); ?> Menit</option>
                                 <?php endfor; ?>
                             </select>
                         </div>
                         <div class="form-group">
                             <select required name="EST_SECONDS" class="form-control" id="EST_SECONDS">
                                 <?php for ($i = 0; $i < 60; $i++): ?>
-                                    <option value="<?php echo $i; ?>"><?php echo sprintf('%2d', $i); ?> detik</option>
+                                    <option value="<?php echo $i; ?>"><?php echo sprintf('%2d', $i); ?> Detik</option>
                                 <?php endfor; ?>
                             </select>
                         </div>

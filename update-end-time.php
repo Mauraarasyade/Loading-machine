@@ -7,7 +7,6 @@
 
         if (!empty($end_time)) {
             $end_time = mysqli_real_escape_string($db, $end_time);
-
             $query = mysqli_query($db, "UPDATE data SET END_TIME='$end_time' WHERE id=$id");
 
             if ($query) {

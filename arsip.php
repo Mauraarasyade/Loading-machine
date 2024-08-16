@@ -1,11 +1,11 @@
 <?php
     include_once("./koneksi.php");
 
-    $processFilter = isset($_GET['process']) ? $_GET['process'] : '';
-    $machineFilter = isset($_GET['machine']) ? $_GET['machine'] : '';
-    $nopFilter = isset($_GET['nop']) ? $_GET['nop'] : '';
+    $processFilter = isset($_GET['process']) ? mysqli_real_escape_string($db, $_GET['process']) : '';
+    $machineFilter = isset($_GET['machine']) ? mysqli_real_escape_string($db, $_GET['machine']) : '';
+    $nopFilter = isset($_GET['nop']) ? mysqli_real_escape_string($db, $_GET['nop']) : '';
 
-    $query = "SELECT * FROM data WHERE START_TIME IS NOT NULL AND END_TIME IS NOT NULL";
+    $query = "SELECT * FROM data WHERE START_TIME != '00:00:00' AND END_TIME != '00:00:00'";
 
     if ($processFilter) {
         $query .= " AND PROCESS = '$processFilter'";
@@ -17,13 +17,33 @@
         $query .= " AND NOP = '$nopFilter'";
     }
 
-    $query .= " AND START_TIME != '' AND END_TIME != ''";
+    $query .= " ORDER BY PRIORITAS DESC, id ASC";
     $result = mysqli_query($db, $query);
 
     if (!$result) {
         die("Query failed: " . mysqli_error($db));
     }
+    
+    $queryNops = "SELECT DISTINCT NOP FROM wip";
+    $resultNops = mysqli_query($db, $queryNops);
+
+    if (!$resultNops) {
+        die("Query Error: " . mysqli_error($db));
+    }
+
+    $nops = [];
+    while ($row = mysqli_fetch_assoc($resultNops)) {
+        $nops[] = $row['NOP'];
+    }
+
+    $queryWip = "SELECT * FROM wip";
+    $resultWip = mysqli_query($db, $queryWip);
+
+    if (!$resultWip) {
+        die("Query Error: " . mysqli_error($db));
+    }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -34,7 +54,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./index.css">
 </head>
 <body>
     <nav class="navbar">
@@ -46,14 +66,11 @@
             <div class="data">
                 <a href="./data.php">Data<i data-feather="archive" class="archive-item"></i></a>
             </div>
-            <div class="add">
-                <a href="./tambah-data.php">Add Data<i data-feather="plus-square" class="add-item"></i></a>
             <div class="empty">
-                <a href="./kosong-data.php">Empty Data Time<i data-feather="file-minus" class="add-item"></i></a>
-            </div>
+                <a href="./kosong-data.php">Empty Data Time<i data-feather="file-minus" class="home-item"></i></a>
             </div>
             <div class="proses">
-                <a href="./progres.php">Process<i data-feather="clock" class="add-item"></i></a>
+                <a href="./progres.php">Process<i data-feather="clock" class="home-item"></i></a>
             </div>
             <div class="excel">
                 <a href="cetak-excel.php?<?php echo http_build_query($_GET); ?>" target="_blank">Download Excel<i data-feather="table" class="excel-item"></i></a>
@@ -120,9 +137,9 @@
                         <label for="nopFilter" class="form-label">Filter NOP</label>
                         <select id="nopFilter" name="nop" class="form-control">
                             <option value="">--- All NOP ---</option>
-                            <option value="red" <?php if ($nopFilter == 'red') echo 'selected'; ?>>Red</option>
-                            <option value="green" <?php if ($nopFilter == 'green') echo 'selected'; ?>>Green</option>
-                            <option value="blue" <?php if ($nopFilter == 'blue') echo 'selected'; ?>>Blue</option>
+                            <?php foreach ($nops as $nop) : ?>
+                                <option value="<?php echo $nop; ?>" <?php if($nopFilter == $nop) echo 'selected'; ?>><?php echo $nop; ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="submit-container">
@@ -142,6 +159,7 @@
                     <th scope="col" class="part">PART NAME</th>
                     <th scope="col" class="material">MATERIAL</th>
                     <th scope="col" class="pos">POS</th>
+                    <th scope="col" class="actual">ACTUAL POS</th>
                     <th scope="col" class="qty">QTY</th>
                     <th scope="col" class="nop">NOP</th>
                     <th scope="col" class="est">EST</th>
@@ -190,6 +208,7 @@
                         <td class="part"><?php echo htmlspecialchars($data["PART_NAME"]); ?></td>
                         <td class="material"><?php echo htmlspecialchars($data["MATERIAL"]); ?></td>
                         <td class="pos"><?php echo htmlspecialchars($data["POS"]); ?></td>
+                        <td class="actual"><?php echo htmlspecialchars($data["ACTUAL_POS"]); ?></td>
                         <td class="qty"><?php echo htmlspecialchars($data["QTY"]); ?></td>
                         <td class="nop"><?php echo htmlspecialchars($data["NOP"]); ?></td>
                         <td class="est"><?php echo htmlspecialchars($data["EST"]); ?></td>
@@ -206,7 +225,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-1MtbIsyU+mg1Xy5Z2pIvGSKXixbJz4lAxj5xVuf7B7OfRmiH2c2o6ZxfIUlHs5EO5" crossorigin="anonymous"></script>
-    <script src="./script.js"></script>
+    <script src="./index.js"></script>
     <script src="./style.js"></script>
     <script src="./javascript.js"></script>
     <script> feather.replace();</script>

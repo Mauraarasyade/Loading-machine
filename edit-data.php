@@ -9,7 +9,6 @@ $data = mysqli_fetch_assoc($query_get_data);
 if (isset($_POST["submit"])) {
     $PART_NAME = mysqli_real_escape_string($db, $_POST["PART_NAME"]);
     $MATERIAL = mysqli_real_escape_string($db, $_POST["MATERIAL"]);
-    $POS = mysqli_real_escape_string($db, $_POST["POS"]);
     $QTY = mysqli_real_escape_string($db, $_POST["QTY"]);
     $NOP = mysqli_real_escape_string($db, $_POST["NOP"]);
     $EST_HOURS = str_pad(intval($_POST["EST_HOURS"]), 2, '0', STR_PAD_LEFT);
@@ -23,7 +22,7 @@ if (isset($_POST["submit"])) {
     $REMARK = mysqli_real_escape_string($db, $_POST["REMARK"]);
     $PRIORITAS = mysqli_real_escape_string($db, $_POST["PRIORITAS"]);
 
-    $query = mysqli_query($db, "UPDATE data SET PART_NAME='$PART_NAME', MATERIAL='$MATERIAL', POS='$POS', QTY='$QTY', NOP='$NOP', EST='$EST', START_TIME='$START_TIME',
+    $query = mysqli_query($db, "UPDATE data SET PART_NAME='$PART_NAME', MATERIAL='$MATERIAL', QTY='$QTY', NOP='$NOP', EST='$EST', START_TIME='$START_TIME',
                                 REMARK='$REMARK', PRIORITAS='$PRIORITAS' WHERE id=$id");
 
     if ($query) {
@@ -83,10 +82,6 @@ if (isset($_POST["submit"])) {
             <div class="mb-3">
                 <label for="MATERIAL" class="form-label">MATERIAL</label>
                 <input required value="<?php echo htmlspecialchars($data['MATERIAL'], ENT_QUOTES, 'UTF-8'); ?>" type="text" name="MATERIAL" class="form-control" id="MATERIAL">
-            </div>
-            <div class="mb-3">
-                <label for="POS" class="form-label">POS</label>
-                <input required value="<?php echo htmlspecialchars($data['POS'], ENT_QUOTES, 'UTF-8'); ?>" type="text" name="POS" class="form-control" id="POS">
             </div>
             <div class="mb-3">
                 <label for="QTY" class="form-label">QTY</label>

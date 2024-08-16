@@ -14,11 +14,7 @@
     if (!empty($machineFilter)) {
         $query .= " AND MACHINE = '" . mysqli_real_escape_string($db, $machineFilter) . "'";
     }
-
-    if (!empty($nopFilter)) {
-        $query .= " AND NOP = '" . mysqli_real_escape_string($db, $nopFilter) . "'";
-    }
-
+    
     $query .= " ORDER BY CASE WHEN START_TIME != '00:00:00' AND END_TIME = '00:00:00' THEN 1
                                 WHEN START_TIME = '00:00:00' AND END_TIME = '00:00:00' THEN 2
                                 ELSE 3 END, PRIORITAS DESC, DATE ASC, START_TIME ASC";
@@ -53,7 +49,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./index.css">
     <style>
         .btn-action {
             border: none;
@@ -98,19 +94,16 @@
 </head>
 <body>
     <nav class="navbar">
-        <a href="#" class="navbar-logo">Loading<span> Machine</span>.</a>
+        <a href="./tambah-data.php" class="navbar-logo"><i data-feather="plus-square" ></i></a>
         <div class="navbar-nav">
             <div class="menu">
                 <a href="./index.php">Home<i data-feather="home" class="home-item"></i></a>
             </div>
-            <div class="add">
-                <a href="./tambah-data.php">Add Data<i data-feather="plus-square" class="add-item"></i></a>
-            </div>
             <div class="empty">
-                <a href="./kosong-data.php">Empty Data Time<i data-feather="file-minus" class="add-item"></i></a>
+                <a href="./kosong-data.php">Empty Data Time<i data-feather="file-minus" class="home-item"></i></a>
             </div>
             <div class="process">
-                <a href="./progres.php">Process<i data-feather="clock" class="add-item"></i></a>
+                <a href="./progres.php">Process<i data-feather="clock" class="excel-item"></i></a>
             </div>
             <div class="arsip">
                 <a href="./arsip.php">Archive<i data-feather="archive" class="archive-item"></i></a>
@@ -188,7 +181,6 @@
                     <div class="submit-container">
                         <button type="submit" class="btn btn-primary mt-3">Submit</button>
                     </div>
-                    
                 </form>
             </label>
         </div>
@@ -202,6 +194,7 @@
                     <th scope="col" class="part">PART NAME</th>
                     <th scope="col" class="material">MATERIAL</th>
                     <th scope="col" class="pos">POS</th>
+                    <th scope="col" class="actual">ACTUAL POS</th>
                     <th scope="col" class="qty">QTY</th>
                     <th scope="col" class="nop">NOP</th>
                     <th scope="col" class="est">EST</th>
@@ -313,18 +306,43 @@
                         </td>
                         <td class="part"><?php echo htmlspecialchars($data["PART_NAME"]); ?></td>
                         <td class="material"><?php echo htmlspecialchars($data["MATERIAL"]); ?></td>
-                        <td class="pos"><?php echo htmlspecialchars($data["POS"]); ?></td>
+                        <td>
+                            <form id="posForm" method="POST" action="update_pos.php">
+                                <div class="pos mb-3">
+                                    <input type="hidden" name="ID" value="<?php echo $data['id']; ?>">
+                                    <input required type="text" name="POS" class="form-control" id="POS" value="<?php echo htmlspecialchars($data['POS']); ?>" onchange="this.form.submit()">
+                                </div>
+                            </form>
+                        </td>
+                        <td class="actual">
+                            <form action="update_actual.php" method="POST" style="display: flex; flex-wrap: nowrap; max-width: 210px;">
+                                <input type="hidden" name="ID" value="<?php echo $data['id']; ?>">
+                                <button type="submit" name="ACTUAL_POS" value="1" class="actual-btn">1</button>
+                                <button type="submit" name="ACTUAL_POS" value="2" class="actual-btn">2</button>
+                                <button type="submit" name="ACTUAL_POS" value="3" class="actual-btn">3</button>
+                                <button type="submit" name="ACTUAL_POS" value="4" class="actual-btn">4</button>
+                                <button type="submit" name="ACTUAL_POS" value="5" class="actual-btn">5</button>
+                                <button type="submit" name="ACTUAL_POS" value="6" class="actual-btn">6</button>
+                                <button type="submit" name="ACTUAL_POS" value="7" class="actual-btn">7</button>
+                            </form>
+                        </td>
                         <td class="qty"><?php echo htmlspecialchars($data["QTY"]); ?></td>
                         <td class="nop">
-                            <select id="nopFilter" name="nop" class="form-control">
-                                <option value="">Pilih NOP</option>
-                                <?php foreach ($nops as $nop): ?>
-                                    <option value="<?php echo htmlspecialchars($nop); ?>" <?php if($nopFilter == $nop) echo 'selected'; ?>>
-                                        <?php echo htmlspecialchars($nop); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </td>
+    <form id="nopForm<?php echo $data['id']; ?>" action="update-nop.php" method="POST">
+        <input type="hidden" name="id" value="<?php echo $data['id']; ?>">
+        <select id="nopFilter" name="nop" class="form-control" onchange="document.getElementById('nopForm<?php echo $data['id']; ?>').submit();">
+            <option value="">Pilih NOP</option>
+            <?php foreach ($nops as $nop): ?>
+                <option value="<?php echo htmlspecialchars($nop); ?>" 
+                    <?php if($data['NOP'] == $nop) echo 'selected'; ?>>
+                    <?php echo htmlspecialchars($nop); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </form>
+</td>
+
+
                         <td class="est" data-id="<?php echo $data['id']; ?>" data-field="est"><?php echo date('H:i:s', strtotime($data['EST'])); ?></td>
                         <td class="date">
                             <input type="date" name="DATE" class="form-control" data-id="<?php echo $data["id"]; ?>" value="<?php echo date('Y-m-d', strtotime($data['DATE'])); ?>">
@@ -367,132 +385,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-1MtbIsyU+mg1Xy5Z2pIvGSKXixbJz4lAxj5xVuf7B7OfRmiH2c2o6ZxfIUlHs5EO5" crossorigin="anonymous"></script>
     <script>feather.replace();</script>
     <script src="./style.js"></script>
-    <script src="./script.js"></script>
     <script src="./javascript.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const machineColors = document.querySelectorAll('.machineColorSelect');
-            
-            machineColors.forEach(function(selectElement) {
-                const storageKey = 'machineColorValue_' + selectElement.dataset.key;
-                const savedValue = localStorage.getItem(storageKey);
-
-                if (savedValue) {
-                    selectElement.value = savedValue;
-                    updateSelectColor(selectElement);
-                }
-
-                selectElement.addEventListener('change', function() {
-                    console.log('Changed select:', selectElement.dataset.key, selectElement.value);
-                    updateSelectColor(selectElement);
-                    localStorage.setItem(storageKey, selectElement.value);
-                });
-            });
-        });
-
-        function updateSelectColor(selectElement) {
-            const value = selectElement.value;
-            if (value.startsWith('GMC')) {
-                selectElement.style.backgroundColor = 'blue';
-                selectElement.style.color = 'white';
-                selectElement.style.fontWeight = 'bold';
-            } else if (value.startsWith('GEC')) {
-                selectElement.style.backgroundColor = 'green';
-                selectElement.style.color = 'white';
-                selectElement.style.fontWeight = 'bold';
-            } else if (value.startsWith('GDC')) {
-                selectElement.style.backgroundColor = 'brown';
-                selectElement.style.color = 'white';
-                selectElement.style.fontWeight = 'bold';
-            } else {
-                selectElement.style.backgroundColor = 'white';
-                selectElement.style.color = 'black';
-            }
-        }
-
-        function checkAvailability(selectedElement) {
-            const selectedValue = selectedElement.value;
-            let isValueUsed = false;
-
-            document.querySelectorAll('.machineColorSelect').forEach(function(select) {
-                if (select !== selectedElement && select.value === selectedValue) {
-                    isValueUsed = true;
-                }
-            });
-
-            if (isValueUsed) {
-                alert("Sedang digunakan");
-                selectedElement.value = '';
-                updateSelectColor(selectedElement);
-                return;
-            }
-
-            document.querySelectorAll('.machineColorSelect').forEach(function(select) {
-                if (select !== selectedElement) {
-                    select.querySelectorAll('option').forEach(function(option) {
-                        if (option.value === selectedValue) {
-                            option.disabled = true;
-                        } else {
-                            if (!isOptionUsedElsewhere(option.value)) {
-                                option.disabled = false;
-                            }
-                        }
-                    });
-                }
-            });
-        }
-
-        function isOptionUsedElsewhere(value) {
-            let isUsed = false;
-            document.querySelectorAll('.machineColorSelect').forEach(function(select) {
-                if (select.value === value) {
-                    isUsed = true;
-                }
-            });
-            return isUsed;
-        }
-
-        window.addEventListener('load', function() {
-            document.querySelectorAll('.machineColorSelect').forEach(function(select) {
-                updateSelectColor(select);
-                const selectedValue = select.value;
-                document.querySelectorAll('.machineColorSelect').forEach(function(otherSelect) {
-                    if (otherSelect !== select) {
-                        otherSelect.querySelectorAll('option').forEach(function(option) {
-                            if (option.value === selectedValue) {
-                                option.disabled = true;
-                            }
-                        });
-                    }
-                });
-            });
-        });
-
-        function updateDate(id, date) {
-            $.ajax({
-                url: 'update-date.php',
-                type: 'POST',
-                data: { id: id, DATE: date },
-                success: function(response) {
-                    if (response === 'Success') {
-                        alert('Date updated successfully');
-                    } else {
-                        alert('Failed to update date: ' + response);
-                    }
-                },
-                error: function() {
-                    alert('Failed to update date');
-                }
-            });
-        }
-
-        $(document).ready(function() {
-            $('input[name="DATE"]').on('change', function() {
-                const id = $(this).data('id');
-                const date = $(this).val();
-                updateDate(id, date);
-            });
-        });
-    </script>
+    <script src="./index.js"></script>
 </body>
 </html>

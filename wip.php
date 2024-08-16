@@ -1,7 +1,6 @@
 <?php
     include_once("./koneksi.php");
 
-    // Query untuk mengambil semua data dari tabel wip
     $query = "SELECT * FROM wip";
     $result = mysqli_query($db, $query);
 
@@ -19,16 +18,16 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./index.css">
     <style>
         .no, .description, .nop, .qty, .ket, .pic, .cust, .start, .del, .remarks {
-            min-width: 150px;
+            min-width: 120px;
         }
         .schedule {
             min-width: 250px;
         }
         .action {
-            min-width: 100px;
+            min-width: 200px;
         }
     </style>
 </head>
@@ -40,7 +39,7 @@
                 <a href="./index.php">Home<i data-feather="home" class="home-item"></i></a>
             </div>
             <div class="add">
-                <a href="./tambah-wip.php">Add Data<i data-feather="plus-square" class="add-item"></i></a>
+                <a href="./tambah-wip.php">Add Data<i data-feather="plus-square" class="home-item"></i></a>
             </div>
         </div>
         <div class="navbar-extra">
@@ -67,7 +66,7 @@
             </thead>
             <tbody>
                 <?php
-                while ($wip = mysqli_fetch_assoc($result)) {
+                    while ($wip = mysqli_fetch_assoc($result)) {
                 ?>
                 <tr align="center">
                     <td class="no"><?php echo htmlspecialchars($wip["NO"]); ?></td>
@@ -84,13 +83,9 @@
                     <td class="action">
                         <a class="btn btn-primary btn-sm" href="edit-wip.php?id=<?php echo $wip['id']; ?>">Edit</a>
                         <a class="btn btn-danger btn-sm my-1" href="hapus-wip.php?id=<?php echo $wip['id']; ?>">Hapus</a>
-                        
                     </td>
                 </tr>
-                <?php
-                }
-                ?>
-                
+                <?php } ?>
             </tbody>
         </table>
     </div>

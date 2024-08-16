@@ -40,6 +40,7 @@
                     <th scope="col">PART NAME</th>
                     <th scope="col">MATERIAL</th>
                     <th scope="col">POS</th>
+                    <th scope="col">ACTUAL POS</th>
                     <th scope="col">QTY</th>
                     <th scope="col">NOP</th>
                     <th scope="col">EST</th>
@@ -60,6 +61,7 @@
                         <td><?php echo $data["PART_NAME"] ?></td>
                         <td><?php echo $data["MATERIAL"] ?></td>
                         <td><?php echo $data["POS"] ?></td>
+                        <td><?php echo $data["ACTUAL_POS"] ?></td>
                         <td><?php echo $data["QTY"] ?></td>
                         <td><?php echo $data["NOP"] ?></td>
                         <td><?php echo $data["EST"] ?></td>

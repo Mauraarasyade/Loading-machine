@@ -7,7 +7,6 @@
 
         if (!empty($status)) {
             $status = mysqli_real_escape_string($db, $status);
-
             $query = mysqli_query($db, "UPDATE data SET STATUS='$status' WHERE id=$id");
 
             if ($query) {
