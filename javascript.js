@@ -19,7 +19,6 @@ function formatDuration(seconds) {
     hours = hours.toString().padStart(2, '0');
     minutes = minutes.toString().padStart(2, '0');
     secs = secs.toString().padStart(2, '0');
-
     return `${hours}:${minutes}:${secs}`;
 }
 
@@ -48,7 +47,6 @@ function loadFromLocalStorage(id) {
         elapsedTime[id] = data.elapsedTime || 0;
         isPaused[id] = data.isPaused || false;
         console.log(`Loaded from Local Storage for ID ${id}`, data);
-
         if (!isPaused[id] && getButtonStatus(id) !== 'end') {
             startStopwatch(id, true);
         } else if (isPaused[id]) {
@@ -59,7 +57,6 @@ function loadFromLocalStorage(id) {
         elapsedTime[id] = 0;
         isPaused[id] = false;
     }
-
     updateButtonStyles(id, getButtonStatus(id));
 }
 
@@ -92,7 +89,6 @@ function startStopwatch(id, fromLoad = false) {
 
         saveToLocalStorage(id, startTimes[id].toISOString(), elapsedTime[id], isPaused[id]);
     }, 1000);
-
     saveButtonStatus(id, 'start');
     updateButtonStyles(id, 'start');
 }
@@ -139,7 +135,6 @@ function updateStartTime(id) {
             alert('Failed to reset end time');
         }
     });
-
     saveButtonStatus(id, 'start');
     updateButtonStyles(id, 'start');
 }
@@ -183,7 +178,6 @@ function updateEndTime(id) {
                 updateStatus(id, duration);
                 saveButtonStatus(id, 'end');
                 updateButtonStyles(id, 'end');
-
                 if (prioritasCell) {
                     prioritasCell.textContent = '-';
                     updatePrioritasInDatabase(id, '-');
@@ -249,7 +243,6 @@ function diffTime(startTime, endTime) {
     hours = String(hours).padStart(2, '0');
     minutes = String(minutes).padStart(2, '0');
     seconds = String(seconds).padStart(2, '0');
-
     return `${hours}:${minutes}:${seconds}`;
 }
 
@@ -342,11 +335,9 @@ $(document).ready(function() {
         $(`#startButton${id}`).click(function() {
             startStopwatch(id);
         });
-
         $(`#pauseButton${id}`).click(function() {
             pauseStopwatch(id);
         });
-
         $(`#endButton${id}`).click(function() {
             updateEndTime(id);
         });
@@ -361,7 +352,6 @@ document.addEventListener('DOMContentLoaded', function() {
     startButtons.forEach(button => {
         let id = button.getAttribute('data-id');
         loadFromLocalStorage(id);
-
         button.addEventListener('click', function() {
             updateStartTime(id);
         });

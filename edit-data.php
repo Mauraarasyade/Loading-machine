@@ -1,44 +1,44 @@
 <?php
-include_once("./koneksi.php");
+    include_once("./koneksi.php");
 
-$id = intval($_GET["id"]);
+    $id = intval($_GET["id"]);
 
-$query_get_data = mysqli_query($db, "SELECT * FROM data WHERE id=$id");
-$data = mysqli_fetch_assoc($query_get_data);
+    $query_get_data = mysqli_query($db, "SELECT * FROM data WHERE id=$id");
+    $data = mysqli_fetch_assoc($query_get_data);
 
-if (isset($_POST["submit"])) {
-    $PART_NAME = mysqli_real_escape_string($db, $_POST["PART_NAME"]);
-    $MATERIAL = mysqli_real_escape_string($db, $_POST["MATERIAL"]);
-    $QTY = mysqli_real_escape_string($db, $_POST["QTY"]);
-    $NOP = mysqli_real_escape_string($db, $_POST["NOP"]);
-    $EST_HOURS = str_pad(intval($_POST["EST_HOURS"]), 2, '0', STR_PAD_LEFT);
-    $EST_MINUTES = str_pad(intval($_POST["EST_MINUTES"]), 2, '0', STR_PAD_LEFT);
-    $EST_SECONDS = str_pad(intval($_POST["EST_SECONDS"]), 2, '0', STR_PAD_LEFT);
-    $EST = sprintf('%s:%s:%s', $EST_HOURS, $EST_MINUTES, $EST_SECONDS);
-    $START_TIME_HOURS = str_pad(intval($_POST["START_TIME_HOURS"]), 2, '0', STR_PAD_LEFT);
-    $START_TIME_MINUTES = str_pad(intval($_POST["START_TIME_MINUTES"]), 2, '0', STR_PAD_LEFT);
-    $START_TIME_SECONDS = str_pad(intval($_POST["START_TIME_SECONDS"]), 2, '0', STR_PAD_LEFT);
-    $START_TIME = sprintf('%s:%s:%s', $START_TIME_HOURS, $START_TIME_MINUTES, $START_TIME_SECONDS);
-    $REMARK = mysqli_real_escape_string($db, $_POST["REMARK"]);
-    $PRIORITAS = mysqli_real_escape_string($db, $_POST["PRIORITAS"]);
+    if (isset($_POST["submit"])) {
+        $PART_NAME = mysqli_real_escape_string($db, $_POST["PART_NAME"]);
+        $MATERIAL = mysqli_real_escape_string($db, $_POST["MATERIAL"]);
+        $QTY = mysqli_real_escape_string($db, $_POST["QTY"]);
+        $NOP = mysqli_real_escape_string($db, $_POST["NOP"]);
+        $EST_HOURS = str_pad(intval($_POST["EST_HOURS"]), 2, '0', STR_PAD_LEFT);
+        $EST_MINUTES = str_pad(intval($_POST["EST_MINUTES"]), 2, '0', STR_PAD_LEFT);
+        $EST_SECONDS = str_pad(intval($_POST["EST_SECONDS"]), 2, '0', STR_PAD_LEFT);
+        $EST = sprintf('%s:%s:%s', $EST_HOURS, $EST_MINUTES, $EST_SECONDS);
+        $START_TIME_HOURS = str_pad(intval($_POST["START_TIME_HOURS"]), 2, '0', STR_PAD_LEFT);
+        $START_TIME_MINUTES = str_pad(intval($_POST["START_TIME_MINUTES"]), 2, '0', STR_PAD_LEFT);
+        $START_TIME_SECONDS = str_pad(intval($_POST["START_TIME_SECONDS"]), 2, '0', STR_PAD_LEFT);
+        $START_TIME = sprintf('%s:%s:%s', $START_TIME_HOURS, $START_TIME_MINUTES, $START_TIME_SECONDS);
+        $REMARK = mysqli_real_escape_string($db, $_POST["REMARK"]);
+        $PRIORITAS = mysqli_real_escape_string($db, $_POST["PRIORITAS"]);
 
-    $query = mysqli_query($db, "UPDATE data SET PART_NAME='$PART_NAME', MATERIAL='$MATERIAL', QTY='$QTY', NOP='$NOP', EST='$EST', START_TIME='$START_TIME',
-                                REMARK='$REMARK', PRIORITAS='$PRIORITAS' WHERE id=$id");
+        $query = mysqli_query($db, "UPDATE data SET PART_NAME='$PART_NAME', MATERIAL='$MATERIAL', QTY='$QTY', NOP='$NOP', EST='$EST', START_TIME='$START_TIME',
+                                    REMARK='$REMARK', PRIORITAS='$PRIORITAS' WHERE id=$id");
 
-    if ($query) {
-        echo "
-        <script>
-            alert('Data Berhasil Diupdate');
-            window.location.href='data.php';
-        </script>";
-    } else {
-        echo "
-        <script>
-            alert('Data Gagal Diupdate');
-            window.location.href='data.php';
-        </script>";
+        if ($query) {
+            echo "
+                <script>
+                    alert('Data Berhasil Diupdate');
+                    window.location.href='data.php';
+                </script>";
+        } else {
+            echo "
+                <script>
+                    alert('Data Gagal Diupdate');
+                    window.location.href='data.php';
+                </script>";
+        }
     }
-}
 ?>
 
 <!DOCTYPE html>
@@ -73,7 +73,6 @@ if (isset($_POST["submit"])) {
 <body>
     <div class="container form-container">
         <h1 class="my-4" align="center">FORM EDIT LOADING MACHINE</h1>
-
         <form action="" method="POST">
             <div class="mb-3">
                 <label for="PART_NAME" class="form-label">PART NAME</label>
@@ -175,7 +174,6 @@ if (isset($_POST["submit"])) {
                 <label for="PRIORITAS" class="form-label">PRIORITAS</label>
                 <input required value="<?php echo htmlspecialchars($data['PRIORITAS'], ENT_QUOTES, 'UTF-8'); ?>" type="text" name="PRIORITAS" class="form-control" id="PRIORITAS">
             </div>
-
             <button type="submit" name="submit" class="btn btn-danger my-5">Submit</button>
             <a class="btn btn-primary" href="./data.php">Kembali ke halaman data</a>
         </form>

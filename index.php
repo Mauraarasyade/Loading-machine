@@ -12,13 +12,12 @@
     <nav class="navbar">
         <a href="#" class="navbar-logo">HALAMAN<span> UTAMA</span>.</a>
     </nav>
-    <h1 align="center">HALAMAN HOME</h1>
+    <h1 align="center">HALAMAN UTAMA</h1>
     <div class="button" align="center">
         <a class="btn btn-primary my-5" href="./data.php">LOADING MACHINE</a>
         <a class="btn btn-primary" href="./kapasitas.php">MACHINE CAPACITY</a>
         <a class="btn btn-primary" href="./wip.php">WIP</a>
     </div>
-    
     <script>feather.replace();</script>
     <script src="./style.js"></script>
 </body>

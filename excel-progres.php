@@ -28,13 +28,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CETAK EXCEL</title>
+    <title>CETAK EXCEL PROCESS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 </head>
 <body>
     <div class="container w-10">
         <h1 class="my-4" align="center">LAPORAN DATA PROCESSING</h1>
-
         <table class="table">
             <thead>
                 <tr>
@@ -57,34 +56,34 @@
                 </tr>
             </thead>
             <tbody>
-            <?php foreach ($result as $data) {
-                    $durationParts = explode(' ', $data["DURATION"]);
-                    if (count($durationParts) >= 4) {
-                        $durationHours = intval($durationParts[0]);
-                        $durationMinutes = intval($durationParts[2]);
-                        $durationMinutesTotal = ($durationHours * 60) + $durationMinutes;
-                    } else {
-                        $durationMinutesTotal = 0;
-                    }
+                <?php foreach ($result as $data) {
+                        $durationParts = explode(' ', $data["DURATION"]);
+                        if (count($durationParts) >= 4) {
+                            $durationHours = intval($durationParts[0]);
+                            $durationMinutes = intval($durationParts[2]);
+                            $durationMinutesTotal = ($durationHours * 60) + $durationMinutes;
+                        } else {
+                            $durationMinutesTotal = 0;
+                        }
 
-                    $estParts = explode(' ', $data["EST"]);
-                    if (count($estParts) >= 4) {
-                        $estHours = intval($estParts[0]);
-                        $estMinutes = intval($estParts[2]);
-                        $estMinutesTotal = ($estHours * 60) + $estMinutes;
-                    } else {
-                        $estMinutesTotal = 0;
-                    }
+                        $estParts = explode(' ', $data["EST"]);
+                        if (count($estParts) >= 4) {
+                            $estHours = intval($estParts[0]);
+                            $estMinutes = intval($estParts[2]);
+                            $estMinutesTotal = ($estHours * 60) + $estMinutes;
+                        } else {
+                            $estMinutesTotal = 0;
+                        }
 
-                    $diffMinutes = $durationMinutesTotal - $estMinutesTotal;
-                    $absDiffMinutes = abs($diffMinutes);
+                        $diffMinutes = $durationMinutesTotal - $estMinutesTotal;
+                        $absDiffMinutes = abs($diffMinutes);
 
-                    $diffHours = floor($absDiffMinutes / 60);
-                    $diffMinutes = $absDiffMinutes % 60;
+                        $diffHours = floor($absDiffMinutes / 60);
+                        $diffMinutes = $absDiffMinutes % 60;
 
-                    $statusClass = 'status-green';
-                    $statusText = "Sedang Diproses";
-                ?>
+                        $statusClass = 'status-green';
+                        $statusText = "Sedang Diproses";
+                    ?>
                     <tr>
                         <td><?php echo $data["PROCESS"] ?></td>
                         <td><?php echo $data["MACHINE"] ?></td>
@@ -99,9 +98,7 @@
                         <td><?php echo $data["START_TIME"] ?></td>
                         <td><?php echo $data["END_TIME"] ?></td>
                         <td><?php echo $data["DURATION"] ?></td>
-                        <td data-id="<?php echo $data['id']; ?>" data-field="status" class="<?php echo $statusClass; ?>">
-                            <?php echo $statusText; ?>
-                        </td>
+                        <td data-id="<?php echo $data['id']; ?>" data-field="status" class="<?php echo $statusClass; ?>"><?php echo $statusText; ?></td>
                         <td><?php echo $data["REMARK"] ?></td>
                         <td><?php echo $data["PRIORITAS"] ?></td>
                     </tr>

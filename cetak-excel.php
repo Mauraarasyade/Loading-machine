@@ -33,7 +33,6 @@
 <body>
     <div class="container w-10">
         <h1 class="my-4" align="center">LAPORAN LOADING MACHINE</h1>
-
         <table class="table">
             <thead>
                 <tr>

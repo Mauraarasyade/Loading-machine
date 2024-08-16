@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
     const machineColors = document.querySelectorAll('.machineColorSelect');
-    
     machineColors.forEach(function(selectElement) {
         const storageKey = 'machineColorValue_' + selectElement.dataset.key;
         const savedValue = localStorage.getItem(storageKey);
@@ -97,31 +96,30 @@ window.addEventListener('load', function() {
 });
 
 function submitForm() {
-const form = document.getElementById('posForm');
-const formData = new FormData(form);
+    const form = document.getElementById('posForm');
+    const formData = new FormData(form);
 
-fetch(form.action, {
-method: 'POST',
-body: formData,
-})
-.then(response => response.text())
-.then(data => {
-console.log('Server response:', data);
-if (data.trim() === "Success") {
-    window.location.href = "data.php";
-} else {
-    alert(data);
-}
-})
-.catch(error => {
-console.error('Error:', error);
-});
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.text())
+    .then(data => {
+        console.log('Server response:', data);
+        if (data.trim() === "Success") {
+            window.location.href = "data.php";
+        } else {
+            alert(data);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
 }
 
 
 document.addEventListener('DOMContentLoaded', function() {
     const columns = document.querySelectorAll('.actual');
-
     columns.forEach((column, columnIndex) => {
         let currentStep = 1;
         const buttons = column.querySelectorAll('.actual-btn');

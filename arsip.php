@@ -19,14 +19,12 @@
 
     $query .= " ORDER BY PRIORITAS DESC, id ASC";
     $result = mysqli_query($db, $query);
-
     if (!$result) {
         die("Query failed: " . mysqli_error($db));
     }
     
     $queryNops = "SELECT DISTINCT NOP FROM wip";
     $resultNops = mysqli_query($db, $queryNops);
-
     if (!$resultNops) {
         die("Query Error: " . mysqli_error($db));
     }
@@ -38,7 +36,6 @@
 
     $queryWip = "SELECT * FROM wip";
     $resultWip = mysqli_query($db, $queryWip);
-
     if (!$resultWip) {
         die("Query Error: " . mysqli_error($db));
     }
@@ -149,7 +146,6 @@
             </label>
         </div>
     </nav>
-
     <div class="container">
         <table class="table">
             <thead>
@@ -173,35 +169,35 @@
             </thead>
             <tbody>
                 <?php while ($data = mysqli_fetch_assoc($result)) {
-                    $durationParts = explode(' ', $data["DURATION"]);
-                    if (count($durationParts) >= 4) {
-                        $durationHours = intval($durationParts[0]);
-                        $durationMinutes = intval($durationParts[2]);
-                        $durationMinutesTotal = ($durationHours * 60) + $durationMinutes;
-                    } else {
-                        $durationMinutesTotal = 0;
-                    }
+                        $durationParts = explode(' ', $data["DURATION"]);
+                        if (count($durationParts) >= 4) {
+                            $durationHours = intval($durationParts[0]);
+                            $durationMinutes = intval($durationParts[2]);
+                            $durationMinutesTotal = ($durationHours * 60) + $durationMinutes;
+                        } else {
+                            $durationMinutesTotal = 0;
+                        }
 
-                    $estParts = explode(' ', $data["EST"]);
-                    if (count($estParts) >= 4) {
-                        $estHours = intval($estParts[0]);
-                        $estMinutes = intval($estParts[2]);
-                        $estMinutesTotal = ($estHours * 60) + $estMinutes;
-                    } else {
-                        $estMinutesTotal = 0;
-                    }
+                        $estParts = explode(' ', $data["EST"]);
+                        if (count($estParts) >= 4) {
+                            $estHours = intval($estParts[0]);
+                            $estMinutes = intval($estParts[2]);
+                            $estMinutesTotal = ($estHours * 60) + $estMinutes;
+                        } else {
+                            $estMinutesTotal = 0;
+                        }
 
-                    $diffMinutes = $durationMinutesTotal - $estMinutesTotal;
-                    $absDiffMinutes = abs($diffMinutes);
+                        $diffMinutes = $durationMinutesTotal - $estMinutesTotal;
+                        $absDiffMinutes = abs($diffMinutes);
 
-                    $diffHours = floor($absDiffMinutes / 60);
-                    $diffMinutes = $absDiffMinutes % 60;
+                        $diffHours = floor($absDiffMinutes / 60);
+                        $diffMinutes = $absDiffMinutes % 60;
 
-                    $statusClass = $durationMinutesTotal > $estMinutesTotal ? 'status-red' : 'status-green';
-                    $statusText = $durationMinutesTotal > $estMinutesTotal ?
-                        "WAKTU LEBIH <br> $diffHours jam, $diffMinutes menit" :
-                        "WAKTU CUKUP <br> $diffHours jam, $diffMinutes menit";
-                ?>
+                        $statusClass = $durationMinutesTotal > $estMinutesTotal ? 'status-red' : 'status-green';
+                        $statusText = $durationMinutesTotal > $estMinutesTotal ?
+                            "WAKTU LEBIH <br> $diffHours jam, $diffMinutes menit" :
+                            "WAKTU CUKUP <br> $diffHours jam, $diffMinutes menit";
+                    ?>
                     <tr>
                         <td class="process"><?php echo htmlspecialchars($data["PROCESS"]); ?></td>
                         <td class="machine"><?php echo htmlspecialchars($data["MACHINE"]); ?></td>
@@ -223,7 +219,6 @@
             </tbody>
         </table>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-1MtbIsyU+mg1Xy5Z2pIvGSKXixbJz4lAxj5xVuf7B7OfRmiH2c2o6ZxfIUlHs5EO5" crossorigin="anonymous"></script>
     <script src="./index.js"></script>
     <script src="./style.js"></script>

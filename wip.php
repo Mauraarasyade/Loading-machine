@@ -66,25 +66,25 @@
             </thead>
             <tbody>
                 <?php
-                    while ($wip = mysqli_fetch_assoc($result)) {
-                ?>
-                <tr align="center">
-                    <td class="no"><?php echo htmlspecialchars($wip["NO"]); ?></td>
-                    <td class="description"><?php echo htmlspecialchars($wip["DESCRIPTION"]); ?></td>
-                    <td class="nop"><?php echo htmlspecialchars($wip["NOP"]); ?></td>
-                    <td class="qty"><?php echo htmlspecialchars($wip["QTY"]); ?></td>
-                    <td class="ket"><?php echo htmlspecialchars($wip["KET"]); ?></td>
-                    <td class="pic"><?php echo htmlspecialchars($wip["PIC"]); ?></td>
-                    <td class="cust"><?php echo htmlspecialchars($wip["CUST"]); ?></td>
-                    <td class="start"><?php echo htmlspecialchars($wip["START"]); ?></td>
-                    <td class="del"><?php echo htmlspecialchars($wip["DEL_PLAN"]); ?></td>
-                    <td class="schedule"><?php echo htmlspecialchars($wip["SCHEDULE_PERCEPATAN"]); ?></td>
-                    <td class="remarks"><?php echo htmlspecialchars($wip["REMARKS"]); ?></td>
-                    <td class="action">
-                        <a class="btn btn-primary btn-sm" href="edit-wip.php?id=<?php echo $wip['id']; ?>">Edit</a>
-                        <a class="btn btn-danger btn-sm my-1" href="hapus-wip.php?id=<?php echo $wip['id']; ?>">Hapus</a>
-                    </td>
-                </tr>
+                        while ($wip = mysqli_fetch_assoc($result)) {
+                    ?>
+                    <tr align="center">
+                        <td class="no"><?php echo htmlspecialchars($wip["NO"]); ?></td>
+                        <td class="description"><?php echo htmlspecialchars($wip["DESCRIPTION"]); ?></td>
+                        <td class="nop"><?php echo htmlspecialchars($wip["NOP"]); ?></td>
+                        <td class="qty"><?php echo htmlspecialchars($wip["QTY"]); ?></td>
+                        <td class="ket"><?php echo htmlspecialchars($wip["KET"]); ?></td>
+                        <td class="pic"><?php echo htmlspecialchars($wip["PIC"]); ?></td>
+                        <td class="cust"><?php echo htmlspecialchars($wip["CUST"]); ?></td>
+                        <td class="start"><?php echo htmlspecialchars($wip["START"]); ?></td>
+                        <td class="del"><?php echo htmlspecialchars($wip["DEL_PLAN"]); ?></td>
+                        <td class="schedule"><?php echo htmlspecialchars($wip["SCHEDULE_PERCEPATAN"]); ?></td>
+                        <td class="remarks"><?php echo htmlspecialchars($wip["REMARKS"]); ?></td>
+                        <td class="action">
+                            <a class="btn btn-primary btn-sm" href="edit-wip.php?id=<?php echo $wip['id']; ?>">Edit</a>
+                            <a class="btn btn-danger btn-sm my-1" href="hapus-wip.php?id=<?php echo $wip['id']; ?>">Hapus</a>
+                        </td>
+                    </tr>
                 <?php } ?>
             </tbody>
         </table>

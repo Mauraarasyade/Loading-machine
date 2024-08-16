@@ -19,14 +19,12 @@
 
     $query .= " ORDER BY PRIORITAS DESC, id ASC";
     $result = mysqli_query($db, $query);
-
     if (!$result) {
         die("Query failed: " . mysqli_error($db));
     }
     
     $queryNops = "SELECT DISTINCT NOP FROM wip";
     $resultNops = mysqli_query($db, $queryNops);
-
     if (!$resultNops) {
         die("Query Error: " . mysqli_error($db));
     }
@@ -38,7 +36,6 @@
 
     $queryWip = "SELECT * FROM wip";
     $resultWip = mysqli_query($db, $queryWip);
-
     if (!$resultWip) {
         die("Query Error: " . mysqli_error($db));
     }
@@ -175,47 +172,47 @@
             </thead>
             <tbody>
                 <?php
-                        foreach ($result as $data) {
-                            $durationParts = explode(':', $data["DURATION"]);
-                            $durationHours = !empty($durationParts[0]) ? intval($durationParts[0]) : 0;
-                            $durationMinutes = !empty($durationParts[1]) ? intval($durationParts[1]) : 0;
-                            $durationSeconds = !empty($durationParts[2]) ? intval($durationParts[2]) : 0;
+                    foreach ($result as $data) {
+                        $durationParts = explode(':', $data["DURATION"]);
+                        $durationHours = !empty($durationParts[0]) ? intval($durationParts[0]) : 0;
+                        $durationMinutes = !empty($durationParts[1]) ? intval($durationParts[1]) : 0;
+                        $durationSeconds = !empty($durationParts[2]) ? intval($durationParts[2]) : 0;
 
-                            $estParts = explode(':', $data["EST"]);
-                            $estHours = !empty($estParts[0]) ? intval($estParts[0]) : 0;
-                            $estMinutes = !empty($estParts[1]) ? intval($estParts[1]) : 0;
-                            $estSeconds = !empty($estParts[2]) ? intval($estParts[2]) : 0;
+                        $estParts = explode(':', $data["EST"]);
+                        $estHours = !empty($estParts[0]) ? intval($estParts[0]) : 0;
+                        $estMinutes = !empty($estParts[1]) ? intval($estParts[1]) : 0;
+                        $estSeconds = !empty($estParts[2]) ? intval($estParts[2]) : 0;
 
-                            $durationTotalSeconds = ($durationHours * 3600) + ($durationMinutes * 60) + $durationSeconds;
-                            $estTotalSeconds = ($estHours * 3600) + ($estMinutes * 60) + $estSeconds;
+                        $durationTotalSeconds = ($durationHours * 3600) + ($durationMinutes * 60) + $durationSeconds;
+                        $estTotalSeconds = ($estHours * 3600) + ($estMinutes * 60) + $estSeconds;
 
-                            $diffSeconds = $durationTotalSeconds - $estTotalSeconds;
-                            $absDiffSeconds = abs($diffSeconds);
-                            $diffHours = floor($absDiffSeconds / 3600);
-                            $diffMinutes = floor(($absDiffSeconds % 3600) / 60);
-                            $diffSecondsFinal = $absDiffSeconds % 60;
+                        $diffSeconds = $durationTotalSeconds - $estTotalSeconds;
+                        $absDiffSeconds = abs($diffSeconds);
+                        $diffHours = floor($absDiffSeconds / 3600);
+                        $diffMinutes = floor(($absDiffSeconds % 3600) / 60);
+                        $diffSecondsFinal = $absDiffSeconds % 60;
 
-                            if ((empty($data["START_TIME"]) || $data["START_TIME"] === '00:00:00') && (empty($data["END_TIME"]) || $data["END_TIME"] === '00:00:00')) {
+                        if ((empty($data["START_TIME"]) || $data["START_TIME"] === '00:00:00') && (empty($data["END_TIME"]) || $data["END_TIME"] === '00:00:00')) {
+                            $statusClass = 'status-red';
+                            $statusText = "Belum Diproses";
+                        } elseif (!empty($data["START_TIME"]) && (empty($data["END_TIME"]) || $data["END_TIME"] === '00:00:00')) {
+                            $statusClass = 'status-green';
+                            $statusText = "Sedang Diproses";
+                        } elseif (!empty($data["START_TIME"]) && !empty($data["END_TIME"])) {
+                            if ($diffSeconds > 0) {
                                 $statusClass = 'status-red';
-                                $statusText = "Belum Diproses";
-                            } elseif (!empty($data["START_TIME"]) && (empty($data["END_TIME"]) || $data["END_TIME"] === '00:00:00')) {
+                                $statusText = "WAKTU LEBIH <br> $diffHours jam, $diffMinutes menit,<br> $diffSecondsFinal detik";
+                            } elseif ($diffSeconds < 0) {
                                 $statusClass = 'status-green';
-                                $statusText = "Sedang Diproses";
-                            } elseif (!empty($data["START_TIME"]) && !empty($data["END_TIME"])) {
-                                if ($diffSeconds > 0) {
-                                    $statusClass = 'status-red';
-                                    $statusText = "WAKTU LEBIH <br> $diffHours jam, $diffMinutes menit,<br> $diffSecondsFinal detik";
-                                } elseif ($diffSeconds < 0) {
-                                    $statusClass = 'status-green';
-                                    $statusText = "WAKTU KURANG <br> $diffHours jam, $diffMinutes menit,<br> $diffSecondsFinal detik";
-                                } else {
-                                    $statusClass = 'status-neutral';
-                                    $statusText = "WAKTU CUKUP";
-                                }
+                                $statusText = "WAKTU KURANG <br> $diffHours jam, $diffMinutes menit,<br> $diffSecondsFinal detik";
                             } else {
-                                $statusClass = 'status-red';
-                                $statusText = "Status Tidak Diketahui";
+                                $statusClass = 'status-neutral';
+                                $statusText = "WAKTU CUKUP";
                             }
+                        } else {
+                            $statusClass = 'status-red';
+                            $statusText = "Status Tidak Diketahui";
+                        }
                     ?>
                     <tr>
                         <td class="process"><?php echo htmlspecialchars($data["PROCESS"]); ?></td>
@@ -260,7 +257,6 @@
             </tbody>
         </table>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-1MtbIsyU+mg1Xy5Z2pIvGSKXixbJz4lAxj5xVuf7B7OfRmiH2c2o6ZxfIUlHs5EO5" crossorigin="anonymous"></script>
     <script>feather.replace();</script>
     <script src="./style.js"></script>

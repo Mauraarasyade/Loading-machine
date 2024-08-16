@@ -14,7 +14,7 @@
     if (!empty($machineFilter)) {
         $query .= " AND MACHINE = '" . mysqli_real_escape_string($db, $machineFilter) . "'";
     }
-    
+
     $query .= " ORDER BY CASE WHEN START_TIME != '00:00:00' AND END_TIME = '00:00:00' THEN 1
                                 WHEN START_TIME = '00:00:00' AND END_TIME = '00:00:00' THEN 2
                                 ELSE 3 END, PRIORITAS DESC, DATE ASC, START_TIME ASC";
@@ -58,7 +58,6 @@
             cursor: pointer;
             transition: color 0.4s;
         }
-
         .btn-action.start-button {
             background-color: white;
             color: grey;
@@ -67,12 +66,10 @@
             background-color: white;
             color: green !important;
         }
-
         .inactive {
             background-color: white;
             color:black !important;
         }
-
         .btn-action.pause-button {
             background-color: white;
             color: grey;
@@ -81,7 +78,6 @@
             background-color: white;
             color: orange !important;
         }
-
         .btn-action.end-button {
             background-color: white;
             color: grey;
@@ -251,7 +247,7 @@
                             $statusClass = 'status-red';
                             $statusText = "Status Tidak Diketahui";
                         }
-                ?>
+                    ?>
                     <tr>
                         <td class="process">
                             <form action="update-machine.php" method="POST" class="update-machine">
@@ -328,21 +324,19 @@
                         </td>
                         <td class="qty"><?php echo htmlspecialchars($data["QTY"]); ?></td>
                         <td class="nop">
-    <form id="nopForm<?php echo $data['id']; ?>" action="update-nop.php" method="POST">
-        <input type="hidden" name="id" value="<?php echo $data['id']; ?>">
-        <select id="nopFilter" name="nop" class="form-control" onchange="document.getElementById('nopForm<?php echo $data['id']; ?>').submit();">
-            <option value="">Pilih NOP</option>
-            <?php foreach ($nops as $nop): ?>
-                <option value="<?php echo htmlspecialchars($nop); ?>" 
-                    <?php if($data['NOP'] == $nop) echo 'selected'; ?>>
-                    <?php echo htmlspecialchars($nop); ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-    </form>
-</td>
-
-
+                            <form id="nopForm<?php echo $data['id']; ?>" action="update-nop.php" method="POST">
+                                <input type="hidden" name="id" value="<?php echo $data['id']; ?>">
+                                <select id="nopFilter" name="nop" class="form-control" onchange="document.getElementById('nopForm<?php echo $data['id']; ?>').submit();">
+                                    <option value="">Pilih NOP</option>
+                                    <?php foreach ($nops as $nop): ?>
+                                        <option value="<?php echo htmlspecialchars($nop); ?>" 
+                                            <?php if($data['NOP'] == $nop) echo 'selected'; ?>>
+                                            <?php echo htmlspecialchars($nop); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </form>
+                        </td>
                         <td class="est" data-id="<?php echo $data['id']; ?>" data-field="est"><?php echo date('H:i:s', strtotime($data['EST'])); ?></td>
                         <td class="date">
                             <input type="date" name="DATE" class="form-control" data-id="<?php echo $data["id"]; ?>" value="<?php echo date('Y-m-d', strtotime($data['DATE'])); ?>">
@@ -381,7 +375,6 @@
             </tbody>
         </table>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-1MtbIsyU+mg1Xy5Z2pIvGSKXixbJz4lAxj5xVuf7B7OfRmiH2c2o6ZxfIUlHs5EO5" crossorigin="anonymous"></script>
     <script>feather.replace();</script>
     <script src="./style.js"></script>
